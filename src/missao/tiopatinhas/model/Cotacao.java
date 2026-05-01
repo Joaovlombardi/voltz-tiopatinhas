@@ -3,8 +3,8 @@ package missao.tiopatinhas.model;
 import java.time.LocalDateTime;
 
 public class Cotacao {
-    private int id;
-    private Criptomoeda criptomoeda;
+    private int id; // PK
+    private Criptomoeda criptomoeda; // FK
     private double precoAtual;
     private double variacao24h;
     private double variacao7d;

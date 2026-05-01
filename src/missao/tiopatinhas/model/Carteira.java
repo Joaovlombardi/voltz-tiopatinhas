@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Carteira {
-    private int id;
-    private Usuario usuario;
+    private int id; // PK
+    private Usuario usuario; // FK
     private double valorTotalInvestido;
     private double valorAtual;
     private double lucroPrejuizo;
-    private List<Ativo> ativos;
-    private List<Transacao> transacoes;
-    private List<Aporte> aportes;
+    private List<Ativo> ativos; // One-to-Many: Uma carteira pode ter vários ativos
+    private List<Transacao> transacoes; // One-to-Many: Uma carteira pode ter várias transações
+    private List<Aporte> aportes; // One-to-Many: Uma carteira pode ter vários aportes
 
     public Carteira() {
         this.ativos = new ArrayList<>();

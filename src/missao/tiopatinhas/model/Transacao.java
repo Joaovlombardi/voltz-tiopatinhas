@@ -4,9 +4,9 @@ import java.time.LocalDateTime;
 
 public class Transacao {
 
-    private int id;
-    private Carteira carteira;
-    private Criptomoeda criptomoeda;
+    private int id; // PK
+    private Carteira carteira; // FK
+    private Criptomoeda criptomoeda; // FK
     private String tipo;
     private double quantidade;
     private double precoUnitario;

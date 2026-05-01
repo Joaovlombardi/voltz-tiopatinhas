@@ -1,18 +1,23 @@
 package missao.tiopatinhas.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Usuario {
-    private int id;
+    private int id; // PK
     private String nome;
     private String cpf;
     private String telefone;
     private String email;
     private String senhaHash;
     private LocalDateTime dataCriacao;
-    private Carteira carteira;
+    private List<Carteira> carteiras; // One-to-Many: Um usuário pode ter várias carteiras
+    private List<Favorito> favoritos; // Many-to-Many: Um usuário pode favoritar várias criptomoedas
 
     public Usuario() {
+        this.carteiras = new ArrayList<>();
+        this.favoritos = new ArrayList<>();
     }
 
     public Usuario(int id, String nome, String cpf, String telefone, String email, String senhaHash, LocalDateTime dataCriacao) {
@@ -23,10 +28,13 @@ public class Usuario {
         this.email = email;
         this.senhaHash = senhaHash;
         this.dataCriacao = dataCriacao;
+        this.carteiras = new ArrayList<>();
+        this.favoritos = new ArrayList<>();
     }
 
-    public void vincularCarteira(Carteira carteira) {
-        this.carteira = carteira;
+    public void adicionarCarteira(Carteira carteira) {
+        this.carteiras.add(carteira);
+        carteira.setUsuario(this);
     }
 
     public int getId() {
@@ -92,11 +100,19 @@ public class Usuario {
     }
 
 
-    public Carteira getCarteira() {
-        return carteira;
+    public List<Carteira> getCarteiras() {
+        return carteiras;
     }
 
-    public void setCarteira(Carteira carteira) {
-        this.carteira = carteira;
+    public void setCarteiras(List<Carteira> carteiras) {
+        this.carteiras = carteiras;
+    }
+
+    public List<Favorito> getFavoritos() {
+        return favoritos;
+    }
+
+    public void setFavoritos(List<Favorito> favoritos) {
+        this.favoritos = favoritos;
     }
 }

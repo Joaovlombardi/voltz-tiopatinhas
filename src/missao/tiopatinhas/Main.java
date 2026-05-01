@@ -18,7 +18,7 @@ public class Main {
         );
 
         Carteira carteira = new Carteira(1, usuario);
-        usuario.vincularCarteira(carteira);
+        usuario.adicionarCarteira(carteira);
 
         Criptomoeda bitcoin = new Criptomoeda(
                 1,
