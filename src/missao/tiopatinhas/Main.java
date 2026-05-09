@@ -43,15 +43,17 @@ public class Main {
 
         carteira.adicionarAtivo(ativoBitcoin);
 
-        Transacao transacaoCompra = new Transacao(
+        Transacao transacaoCompra = new Compra(
                 1,
                 carteira,
                 bitcoin,
-                "COMPRA",
                 0.5,
                 300000.00,
                 LocalDateTime.now()
         );
+        transacaoCompra.exibirDados();
+
+        System.out.println(transacaoCompra.calcularValorTotal());
 
         carteira.adicionarTransacao(transacaoCompra);
 
@@ -62,6 +64,8 @@ public class Main {
                 LocalDateTime.now(),
                 "Aporte inicial para compra de Bitcoin"
         );
+
+
 
         carteira.adicionarAporte(aporte);
 
