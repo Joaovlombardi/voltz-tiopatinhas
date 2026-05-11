@@ -115,4 +115,20 @@ public class Usuario {
     public void setFavoritos(List<Favorito> favoritos) {
         this.favoritos = favoritos;
     }
+    public void exibirDados() {
+    System.out.println("Usuário: " + nome);
+}
+
+public void exibirDados(boolean detalhado) {
+
+    if (detalhado) {
+        System.out.println("ID: " + id);
+        System.out.println("Nome: " + nome);
+        System.out.println("CPF: " + cpf);
+        System.out.println("Telefone: " + telefone);
+        System.out.println("Email: " + email);
+    } else {
+        System.out.println("Usuário: " + nome);
+    }
+}
 }

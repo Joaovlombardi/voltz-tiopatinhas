@@ -21,4 +21,16 @@ public class Compra extends Transacao { // herança
     public void exibirDados() {
         System.out.println("Compra realizada.");
     }
+    public void exibirDados(boolean detalhado) {
+
+    exibirDados();
+
+    if (detalhado) {
+        System.out.println("Criptomoeda: " + getCriptomoeda().getNome());
+        System.out.println("Quantidade: " + getQuantidade());
+        System.out.println("Preço unitário: " + getPrecoUnitario());
+        System.out.println("Valor total: " + calcularValorTotal());
+        System.out.println("Data/Hora: " + getDataHora());
+    }
+}
 }

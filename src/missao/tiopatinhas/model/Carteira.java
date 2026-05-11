@@ -38,6 +38,15 @@ public class Carteira {
     public void adicionarAporte(Aporte aporte) {
         aportes.add(aporte);
     }
+    
+    public void adicionarAporte(Aporte aporte, boolean mostrarMensagem) {
+
+    adicionarAporte(aporte);
+
+    if (mostrarMensagem) {
+        System.out.println("Aporte adicionado com sucesso!");
+    }
+}
 
     public double calcularValorAtual() {
         double soma = 0;
