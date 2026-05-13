@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 
 public class Aporte {
 
-    private int id;
-    private Carteira carteira;
+    private int id; // PK
+    private Carteira carteira; // FK
     private double valor;
     private LocalDateTime dataHora;
     private String descricao;

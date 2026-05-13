@@ -2,11 +2,11 @@ package missao.tiopatinhas.model;
 
 import java.time.LocalDateTime;
 
-public class Transacao {
+public abstract class Transacao {
 
-    private int id;
-    private Carteira carteira;
-    private Criptomoeda criptomoeda;
+    private int id; // PK
+    private Carteira carteira; // FK
+    private Criptomoeda criptomoeda; // FK
     private String tipo;
     private double quantidade;
     private double precoUnitario;
@@ -28,10 +28,7 @@ public class Transacao {
         this.valorTotal = calcularValorTotal();
     }
 
-    public double calcularValorTotal() {
-        this.valorTotal = this.quantidade * this.precoUnitario;
-        return this.valorTotal;
-    }
+    public abstract double calcularValorTotal();
 
     public int getId() {
         return id;
@@ -103,4 +100,5 @@ public class Transacao {
     public void setDataHora(LocalDateTime dataHora) {
         this.dataHora = dataHora;
     }
+    public abstract void exibirDados();
 }

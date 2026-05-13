@@ -1,10 +1,14 @@
 package missao.tiopatinhas.model;
 
+/**
+ * Entidade Associativa que representa a relação Many-to-Many entre Carteira e Criptomoeda.
+ * Representa o saldo de uma criptomoeda específica em uma carteira.
+ */
 public class Ativo {
 
-    private int id;
-    private Carteira carteira;
-    private Criptomoeda criptomoeda;
+    private int id; // PK
+    private Carteira carteira; // FK
+    private Criptomoeda criptomoeda; // FK
     private double quantidade;
     private double precoMedio;
     private double valorInvestido;
