@@ -6,71 +6,125 @@ import missao.tiopatinhas.service.ApiCotacaoService;
 import java.time.LocalDateTime;
 
 public class Main {
-        public static void main(String[] args) {
-                Usuario usuario = new Usuario(
-                                1,
-                                "João Vitor",
-                                "123.456.789-00",
-                                "(11) 99999-9999",
-                                "joao@email.com",
-                                "senha123",
-                                LocalDateTime.now());
+    public static void main(String[] args) {
+        try {
+            System.out.println("=== TESTES DO SISTEMA ===\n");
 
-                Carteira carteira = new Carteira(1, usuario);
-                usuario.adicionarCarteira(carteira);
+            Usuario usuario = new Usuario(
+                1,
+                "João Vitor",
+                "123.456.789-00",
+                "(11) 99999-9999",
+                "joao@email.com",
+                "senha123",
+                LocalDateTime.now()
+            );
 
-                Criptomoeda bitcoin = new Criptomoeda(
-                                1,
-                                "Bitcoin",
-                                "BTC",
-                                "Principal criptomoeda do mercado");
+            Carteira carteira = new Carteira(1, usuario);
+            usuario.adicionarCarteira(carteira);
 
-                Ativo ativoBitcoin = new Ativo(
-                                1,
-                                carteira,
-                                bitcoin,
-                                0.5,
-                                300000.00);
+            Criptomoeda bitcoin = new Criptomoeda(
+                1,
+                "Bitcoin",
+                "BTC",
+                "Principal criptomoeda do mercado"
+            );
 
-                ApiCotacaoService apiCotacaoService = new ApiCotacaoService();
-                Cotacao cotacaoBitcoin = apiCotacaoService.buscarCotacao(bitcoin);
+            Criptomoeda ethereum = new Criptomoeda(
+                2,
+                "Ethereum",
+                "ETH",
+                "Plataforma descentralizada"
+            );
 
-                ativoBitcoin.calcularValorAtual(cotacaoBitcoin.getPrecoAtual());
-                ativoBitcoin.calcularValorInvestido();
+            Ativo ativoBitcoin = new Ativo(1, carteira, bitcoin, 0.5, 300000.00);
+            carteira.adicionarAtivo(ativoBitcoin);
 
-                carteira.adicionarAtivo(ativoBitcoin);
+            Ativo ativoEthereum = new Ativo(2, carteira, ethereum, 10.0, 20000.00);
+            carteira.adicionarAtivo(ativoEthereum);
 
-                Transacao transacaoCompra = new Compra(
-                                1,
-                                carteira,
-                                bitcoin,
-                                0.5,
-                                300000.00,
-                                LocalDateTime.now());
-                ((Compra)transacaoCompra).exibirDados(true);
+            ApiCotacaoService apiService = new ApiCotacaoService();
+            Cotacao cotacaoBitcoin = apiService.buscarCotacao(bitcoin);
+            Cotacao cotacaoEthereum = apiService.buscarCotacao(ethereum);
 
-                carteira.adicionarTransacao(transacaoCompra);
+            ativoBitcoin.calcularValorAtual(cotacaoBitcoin.getPrecoAtual());
+            ativoBitcoin.calcularValorInvestido();
+            ativoEthereum.calcularValorAtual(350000.00);
+            ativoEthereum.calcularValorInvestido();
 
-                Aporte aporte = new Aporte(
-                                1,
-                                carteira,
-                                150000.00,
-                                LocalDateTime.now(),
-                                "Aporte inicial para compra de Bitcoin");
+            Compra compra1 = new Compra(
+                1,
+                carteira,
+                bitcoin,
+                0.5,
+                300000.00,
+                LocalDateTime.now()
+            );
+            carteira.adicionarTransacao(compra1);
 
-                carteira.adicionarAporte(aporte,true);
+            Compra compra2 = new Compra(
+                2,
+                carteira,
+                ethereum,
+                10.0,
+                20000.00,
+                LocalDateTime.now()
+            );
+            carteira.adicionarTransacao(compra2);
 
-                usuario.exibirDados();
+            Aporte aporte1 = new Aporte(
+                1,
+                carteira,
+                150000.00,
+                LocalDateTime.now(),
+                "Aporte inicial"
+            );
+            carteira.adicionarAporte(aporte1);
 
-                System.out.println();
+            Aporte aporte2 = new Aporte(
+                2,
+                carteira,
+                200000.00,
+                LocalDateTime.now(),
+                "Aporte adicional"
+            );
+            carteira.adicionarAporte(aporte2, true);
 
-                usuario.exibirDados(true);
+            Favorito fav1 = new Favorito(1, usuario, bitcoin, LocalDateTime.now());
+            usuario.getFavoritos().add(fav1);
 
-                System.out.println();
+            Favorito fav2 = new Favorito(2, usuario, ethereum, LocalDateTime.now());
+            usuario.getFavoritos().add(fav2);
 
-                System.out.println("Preço atual: " + cotacaoBitcoin.getPrecoAtual());
-                System.out.println("Valor investido: " + carteira.calcularValorTotalInvestido());
-                System.out.println("Valor atual: " + carteira.calcularValorAtual());
-                System.out.println("Lucro/Prejuízo: " + carteira.calcularLucroPrejuizo());
+            System.out.println("--- Usuario ---");
+            usuario.exibirDados();
+            usuario.exibirDados(true);
+
+            System.out.println("\n--- Criptomoedas Favoritas ---");
+            for (Favorito fav : usuario.getFavoritos()) {
+                System.out.println("  " + fav.getCriptomoeda().getNome() + " (" + fav.getCriptomoeda().getSimbolo() + ")");
+            }
+
+            System.out.println("\n--- Transacoes ---");
+            compra1.exibirDados();
+            compra1.exibirDados(true);
+            System.out.println();
+            compra2.exibirDados();
+            compra2.exibirDados(true);
+
+            System.out.println("\n--- Carteira ---");
+            System.out.println("  Ativos: " + carteira.getAtivos().size());
+            System.out.println("  Transacoes: " + carteira.getTransacoes().size());
+            System.out.println("  Aportes: " + carteira.getAportes().size());
+            System.out.println("  Valor total investido: R$ " + String.format("%.2f", carteira.calcularValorTotalInvestido()));
+            System.out.println("  Valor atual: R$ " + String.format("%.2f", carteira.calcularValorAtual()));
+            System.out.println("  Lucro/Prejuizo: R$ " + String.format("%.2f", carteira.calcularLucroPrejuizo()));
+
+            System.out.println("\n=== TESTE EXECUTADO COM SUCESSO ===");
+
+        } catch (Exception e) {
+            System.out.println("ERRO DURANTE EXECUCAO: " + e.getMessage());
+            e.printStackTrace();
         }
+    }
 }
