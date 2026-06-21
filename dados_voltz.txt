@@ -1,0 +1,28 @@
+=== DADOS DO SISTEMA VOLTZ ===
+
+=== USUARIOS NO HASHMAP ===
+Chave: 1
+Usuario: João Vitor
+Email: joao@email.com
+
+=== CRIPTOMOEDAS NO HASHMAP ===
+Chave: 1
+Criptomoeda: Bitcoin
+Simbolo: BTC
+
+
+=== USUARIOS NO ARRAYLIST ===
+Usuario: João Vitor
+Email: joao@email.com
+
+=== CRIPTOMOEDAS NO ARRAYLIST ===
+Criptomoeda: Bitcoin
+Simbolo: BTC
+
+Criptomoeda: Ethereum
+Simbolo: ETH
+
+=== DADOS DA CARTEIRA ===
+Quantidade de ativos: 2
+Quantidade de transacoes: 2
+Quantidade de aportes: 2
