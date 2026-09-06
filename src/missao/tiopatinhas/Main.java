@@ -2,6 +2,7 @@ package missao.tiopatinhas;
 
 import missao.tiopatinhas.model.*;
 import missao.tiopatinhas.service.ApiCotacaoService;
+import missao.tiopatinhas.dao.CriptomoedaDao;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -224,6 +225,9 @@ public class Main {
              // Testando remove() depois de gravar o arquivo
             listaCriptomoedas.remove(ethereum);
             System.out.println("Ethereum removido do ArrayList.");
+            // ================= BANCO DE DADOS - CRUD CRIPTOMOEDA =================
+            testarCrudCriptomoeda();
+
             System.out.println("\n=== TESTE EXECUTADO COM SUCESSO ===");
 
         } catch (Exception e) {
@@ -231,4 +235,95 @@ public class Main {
             e.printStackTrace();
         }
     }
+    private static void testarCrudCriptomoeda() {
+
+    CriptomoedaDao dao = null;
+
+    try {
+        dao = new CriptomoedaDao();
+
+        // Limpa o registro caso o teste já tenha sido executado
+        dao.excluir(99);
+
+        System.out.println("\n=== TESTE CRUD CRIPTOMOEDA NO BANCO ===");
+
+        // INSERT
+        Criptomoeda criptomoedaTeste = new Criptomoeda(
+                99,
+                "Cardano",
+                "ADA",
+                "Criptomoeda inserida pelo Main"
+        );
+
+        dao.inserir(criptomoedaTeste);
+        System.out.println("INSERT realizado com sucesso.");
+
+        // SELECT
+        System.out.println("\n--- CRIPTOMOEDAS APOS INSERT ---");
+
+        for (Criptomoeda cripto : dao.listar()) {
+            System.out.println(
+                    cripto.getId() + " | "
+                            + cripto.getNome() + " | "
+                            + cripto.getSimbolo() + " | "
+                            + cripto.getDescricao()
+            );
+        }
+
+        // UPDATE
+        criptomoedaTeste.setNome("Cardano Atualizada");
+        criptomoedaTeste.setDescricao("Descricao atualizada pelo Main");
+
+        dao.alterar(criptomoedaTeste);
+        System.out.println("\nUPDATE realizado com sucesso.");
+
+        // SELECT novamente
+        System.out.println("\n--- CRIPTOMOEDAS APOS UPDATE ---");
+
+        for (Criptomoeda cripto : dao.listar()) {
+            System.out.println(
+                    cripto.getId() + " | "
+                            + cripto.getNome() + " | "
+                            + cripto.getSimbolo() + " | "
+                            + cripto.getDescricao()
+            );
+        }
+
+        // DELETE
+        dao.excluir(99);
+        System.out.println("\nDELETE realizado com sucesso.");
+
+        // SELECT final
+        System.out.println("\n--- CRIPTOMOEDAS APOS DELETE ---");
+
+        for (Criptomoeda cripto : dao.listar()) {
+            System.out.println(
+                    cripto.getId() + " | "
+                            + cripto.getNome() + " | "
+                            + cripto.getSimbolo() + " | "
+                            + cripto.getDescricao()
+            );
+        }
+
+    } catch (Exception e) {
+
+        System.out.println(
+                "Erro ao testar CRUD de Criptomoeda: "
+                        + e.getMessage()
+        );
+
+    } finally {
+
+        if (dao != null) {
+            try {
+                dao.fecharConexao();
+            } catch (Exception e) {
+                System.out.println(
+                        "Erro ao fechar conexao: "
+                                + e.getMessage()
+                );
+            }
+        }
+    }
+}
 }
