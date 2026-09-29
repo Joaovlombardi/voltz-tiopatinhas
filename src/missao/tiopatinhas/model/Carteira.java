@@ -1,74 +1,127 @@
 package missao.tiopatinhas.model;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Carteira {
-    private int id; // PK
-    private Usuario usuario; // FK
+
+    private int id;
+    private Usuario usuario;
     private double valorTotalInvestido;
     private double valorAtual;
     private double lucroPrejuizo;
-    private List<Ativo> ativos; // One-to-Many: Uma carteira pode ter vários ativos
-    private List<Transacao> transacoes; // One-to-Many: Uma carteira pode ter várias transações
-    private List<Aporte> aportes; // One-to-Many: Uma carteira pode ter vários aportes
+    private LocalDateTime dataAtualizacao;
+
+    private List<Ativo> ativos;
+    private List<Transacao> transacoes;
+    private List<Aporte> aportes;
 
     public Carteira() {
+
         this.ativos = new ArrayList<>();
         this.transacoes = new ArrayList<>();
         this.aportes = new ArrayList<>();
     }
 
-    public Carteira(int id, Usuario usuario) {
+    public Carteira(
+            int id,
+            Usuario usuario
+    ) {
+
+        this();
+
         this.id = id;
         this.usuario = usuario;
-        this.ativos = new ArrayList<>();
-        this.transacoes = new ArrayList<>();
-        this.aportes = new ArrayList<>();
+    }
+
+    public Carteira(
+            int id,
+            Usuario usuario,
+            double valorTotalInvestido,
+            double valorAtual,
+            double lucroPrejuizo,
+            LocalDateTime dataAtualizacao
+    ) {
+
+        this(id, usuario);
+
+        this.valorTotalInvestido =
+                valorTotalInvestido;
+
+        this.valorAtual =
+                valorAtual;
+
+        this.lucroPrejuizo =
+                lucroPrejuizo;
+
+        this.dataAtualizacao =
+                dataAtualizacao;
     }
 
     public void adicionarAtivo(Ativo ativo) {
         ativos.add(ativo);
     }
 
-    public void adicionarTransacao(Transacao transacao) {
+    public void adicionarTransacao(
+            Transacao transacao
+    ) {
         transacoes.add(transacao);
     }
 
-    public void adicionarAporte(Aporte aporte) {
+    public void adicionarAporte(
+            Aporte aporte
+    ) {
         aportes.add(aporte);
     }
-    
-    public void adicionarAporte(Aporte aporte, boolean mostrarMensagem) {
 
-    adicionarAporte(aporte);
+    public void adicionarAporte(
+            Aporte aporte,
+            boolean mostrarMensagem
+    ) {
 
-    if (mostrarMensagem) {
-        System.out.println("Aporte adicionado com sucesso!");
+        adicionarAporte(aporte);
+
+        if (mostrarMensagem) {
+            System.out.println(
+                    "Aporte adicionado com sucesso!"
+            );
+        }
     }
-}
 
     public double calcularValorAtual() {
+
         double soma = 0;
+
         for (Ativo ativo : ativos) {
             soma += ativo.getValorAtual();
         }
-        this.valorAtual = soma;
-        return this.valorAtual;
+
+        valorAtual = soma;
+
+        return valorAtual;
     }
 
     public double calcularValorTotalInvestido() {
+
         double soma = 0;
+
         for (Ativo ativo : ativos) {
             soma += ativo.getValorInvestido();
         }
-        this.valorTotalInvestido = soma;
-        return this.valorTotalInvestido;
+
+        valorTotalInvestido = soma;
+
+        return valorTotalInvestido;
     }
 
     public double calcularLucroPrejuizo() {
-        this.lucroPrejuizo = calcularValorAtual() - calcularValorTotalInvestido();
-        return this.lucroPrejuizo;
+
+        lucroPrejuizo =
+                calcularValorAtual()
+                        - calcularValorTotalInvestido();
+
+        return lucroPrejuizo;
     }
 
     public int getId() {
@@ -79,66 +132,86 @@ public class Carteira {
         this.id = id;
     }
 
-
     public Usuario getUsuario() {
         return usuario;
     }
 
-    public void setUsuario(Usuario usuario) {
+    public void setUsuario(
+            Usuario usuario
+    ) {
         this.usuario = usuario;
     }
-
 
     public double getValorTotalInvestido() {
         return valorTotalInvestido;
     }
 
-    public void setValorTotalInvestido(double valorTotalInvestido) {
-        this.valorTotalInvestido = valorTotalInvestido;
+    public void setValorTotalInvestido(
+            double valorTotalInvestido
+    ) {
+        this.valorTotalInvestido =
+                valorTotalInvestido;
     }
-
 
     public double getValorAtual() {
         return valorAtual;
     }
 
-    public void setValorAtual(double valorAtual) {
+    public void setValorAtual(
+            double valorAtual
+    ) {
         this.valorAtual = valorAtual;
     }
-
 
     public double getLucroPrejuizo() {
         return lucroPrejuizo;
     }
 
-    public void setLucroPrejuizo(double lucroPrejuizo) {
-        this.lucroPrejuizo = lucroPrejuizo;
+    public void setLucroPrejuizo(
+            double lucroPrejuizo
+    ) {
+        this.lucroPrejuizo =
+                lucroPrejuizo;
     }
 
+    public LocalDateTime getDataAtualizacao() {
+        return dataAtualizacao;
+    }
+
+    public void setDataAtualizacao(
+            LocalDateTime dataAtualizacao
+    ) {
+        this.dataAtualizacao =
+                dataAtualizacao;
+    }
 
     public List<Ativo> getAtivos() {
         return ativos;
     }
 
-    public void setAtivos(List<Ativo> ativos) {
+    public void setAtivos(
+            List<Ativo> ativos
+    ) {
         this.ativos = ativos;
     }
-
 
     public List<Transacao> getTransacoes() {
         return transacoes;
     }
 
-    public void setTransacoes(List<Transacao> transacoes) {
+    public void setTransacoes(
+            List<Transacao> transacoes
+    ) {
         this.transacoes = transacoes;
     }
-
 
     public List<Aporte> getAportes() {
         return aportes;
     }
 
-    public void setAportes(List<Aporte> aportes) {
+    public void setAportes(
+            List<Aporte> aportes
+    ) {
         this.aportes = aportes;
     }
 }

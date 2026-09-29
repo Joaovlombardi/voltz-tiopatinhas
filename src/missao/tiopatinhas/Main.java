@@ -3,6 +3,9 @@ package missao.tiopatinhas;
 import missao.tiopatinhas.model.*;
 import missao.tiopatinhas.service.ApiCotacaoService;
 import missao.tiopatinhas.dao.CriptomoedaDao;
+import missao.tiopatinhas.dao.UsuarioDao;
+import missao.tiopatinhas.dao.CarteiraDao;
+import missao.tiopatinhas.dao.AtivoDao;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -16,6 +19,9 @@ public class Main {
     public static void main(String[] args) {
         try {
             System.out.println("=== TESTES DO SISTEMA ===\n");
+
+            testarCrudUsuarioCarteira();
+            testarCrudAtivo();
 
             Usuario usuario = new Usuario(
                     1,
@@ -326,4 +332,439 @@ public class Main {
         }
     }
 }
+
+    private static void testarCrudUsuarioCarteira() {
+
+        UsuarioDao usuarioDao = null;
+        CarteiraDao carteiraDao = null;
+
+        final int ID_TESTE = 98;
+
+        try {
+
+            usuarioDao = new UsuarioDao();
+            carteiraDao = new CarteiraDao();
+
+            System.out.println(
+                    "\n=== TESTE CRUD USUARIO E CARTEIRA NO BANCO ==="
+            );
+
+            carteiraDao.excluir(ID_TESTE);
+            usuarioDao.excluir(ID_TESTE);
+
+            Usuario usuarioTeste = new Usuario(
+                    ID_TESTE,
+                    "Usuario Teste Voltz",
+                    "98765432198",
+                    "(11) 98888-9898",
+                    "usuario98@voltz.com",
+                    "hash_teste_98",
+                    LocalDateTime.now()
+            );
+
+            usuarioDao.inserir(usuarioTeste);
+
+            System.out.println(
+                    "Usuario: INSERT realizado com sucesso."
+            );
+
+            System.out.println(
+                    "\n--- USUARIO APOS INSERT ---"
+            );
+
+            for (Usuario u : usuarioDao.listar()) {
+
+                if (u.getId() == ID_TESTE) {
+
+                    System.out.println(
+                            u.getId()
+                                    + " | "
+                                    + u.getNome()
+                                    + " | "
+                                    + u.getCpf()
+                                    + " | "
+                                    + u.getEmail()
+                    );
+                }
+            }
+
+            Carteira carteiraTeste = new Carteira(
+                    ID_TESTE,
+                    usuarioTeste,
+                    1000.00,
+                    1150.00,
+                    150.00,
+                    LocalDateTime.now()
+            );
+
+            carteiraDao.inserir(carteiraTeste);
+
+            System.out.println(
+                    "Carteira: INSERT realizado com sucesso."
+            );
+
+            System.out.println(
+                    "\n--- CARTEIRA APOS INSERT ---"
+            );
+
+            for (Carteira c : carteiraDao.listar()) {
+
+                if (c.getId() == ID_TESTE) {
+
+                    System.out.println(
+                            c.getId()
+                                    + " | usuario_id="
+                                    + c.getUsuario().getId()
+                                    + " | investido="
+                                    + c.getValorTotalInvestido()
+                                    + " | atual="
+                                    + c.getValorAtual()
+                                    + " | lucro/prejuizo="
+                                    + c.getLucroPrejuizo()
+                    );
+                }
+            }
+
+            usuarioTeste.setNome(
+                    "Usuario Teste Voltz Atualizado"
+            );
+
+            usuarioTeste.setTelefone(
+                    "(21) 97777-9898"
+            );
+
+            usuarioTeste.setEmail(
+                    "usuario98.atualizado@voltz.com"
+            );
+
+            usuarioTeste.setSenhaHash(
+                    "hash_teste_98_atualizado"
+            );
+
+            usuarioDao.alterar(usuarioTeste);
+
+            System.out.println(
+                    "Usuario: UPDATE realizado com sucesso."
+            );
+
+            carteiraTeste.setValorTotalInvestido(
+                    1500.00
+            );
+
+            carteiraTeste.setValorAtual(
+                    1800.00
+            );
+
+            carteiraTeste.setLucroPrejuizo(
+                    300.00
+            );
+
+            carteiraTeste.setDataAtualizacao(
+                    LocalDateTime.now()
+            );
+
+            carteiraDao.alterar(
+                    carteiraTeste
+            );
+
+            System.out.println(
+                    "Carteira: UPDATE realizado com sucesso."
+            );
+
+            System.out.println(
+                    "\n--- DADOS APOS UPDATE ---"
+            );
+
+            for (Usuario u : usuarioDao.listar()) {
+
+                if (u.getId() == ID_TESTE) {
+
+                    System.out.println(
+                            "Usuario atualizado: "
+                                    + u.getNome()
+                                    + " | "
+                                    + u.getEmail()
+                    );
+                }
+            }
+
+            for (Carteira c : carteiraDao.listar()) {
+
+                if (c.getId() == ID_TESTE) {
+
+                    System.out.println(
+                            "Carteira atualizada: investido="
+                                    + c.getValorTotalInvestido()
+                                    + " | atual="
+                                    + c.getValorAtual()
+                                    + " | lucro/prejuizo="
+                                    + c.getLucroPrejuizo()
+                    );
+                }
+            }
+
+            carteiraDao.excluir(ID_TESTE);
+
+            System.out.println(
+                    "Carteira: DELETE realizado com sucesso."
+            );
+
+            usuarioDao.excluir(ID_TESTE);
+
+            System.out.println(
+                    "Usuario: DELETE realizado com sucesso."
+            );
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Erro ao testar CRUD de Usuario/Carteira: "
+                            + e.getMessage()
+            );
+
+            e.printStackTrace();
+
+        } finally {
+
+            if (carteiraDao != null) {
+
+                try {
+                    carteiraDao.fecharConexao();
+
+                } catch (Exception e) {
+
+                    System.out.println(
+                            "Erro ao fechar conexao de Carteira: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+
+            if (usuarioDao != null) {
+
+                try {
+                    usuarioDao.fecharConexao();
+
+                } catch (Exception e) {
+
+                    System.out.println(
+                            "Erro ao fechar conexao de Usuario: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+        }
+    }
+
+    private static void testarCrudAtivo() {
+
+        AtivoDao ativoDao = null;
+        UsuarioDao usuarioDao = null;
+        CarteiraDao carteiraDao = null;
+        CriptomoedaDao criptomoedaDao = null;
+
+        final int ID_TESTE = 97;
+
+        try {
+
+            ativoDao = new AtivoDao();
+            usuarioDao = new UsuarioDao();
+            carteiraDao = new CarteiraDao();
+            criptomoedaDao = new CriptomoedaDao();
+
+            System.out.println(
+                    "\n=== TESTE CRUD ATIVO NO BANCO ==="
+            );
+
+            ativoDao.excluir(ID_TESTE);
+            carteiraDao.excluir(ID_TESTE);
+            usuarioDao.excluir(ID_TESTE);
+            criptomoedaDao.excluir(ID_TESTE);
+
+            Usuario usuarioTesteAtivo = new Usuario(
+                    ID_TESTE,
+                    "Usuario Teste Ativo",
+                    "98765432197",
+                    "(11) 97777-9797",
+                    "ativo97@voltz.com",
+                    "hash_ativo_97",
+                    LocalDateTime.now()
+            );
+
+            usuarioDao.inserir(usuarioTesteAtivo);
+
+            Carteira carteiraTesteAtivo = new Carteira(
+                    ID_TESTE,
+                    usuarioTesteAtivo,
+                    2000.00,
+                    2200.00,
+                    200.00,
+                    LocalDateTime.now()
+            );
+
+            carteiraDao.inserir(carteiraTesteAtivo);
+
+            Criptomoeda criptomoedaTesteAtivo = new Criptomoeda(
+                    ID_TESTE,
+                    "Teste Ativo Coin",
+                    "TAC",
+                    "Criptomoeda temporaria para teste do Ativo"
+            );
+
+            criptomoedaDao.inserir(criptomoedaTesteAtivo);
+
+            Ativo ativoTeste = new Ativo(
+                    ID_TESTE,
+                    carteiraTesteAtivo,
+                    criptomoedaTesteAtivo,
+                    2.0,
+                    500.00
+            );
+
+            ativoTeste.setValorAtual(
+                    1100.00
+            );
+
+            ativoDao.inserir(ativoTeste);
+
+            System.out.println(
+                    "Ativo: INSERT realizado com sucesso."
+            );
+
+            System.out.println(
+                    "\n--- ATIVO APOS INSERT ---"
+            );
+
+            for (Ativo a : ativoDao.listar()) {
+
+                if (a.getId() == ID_TESTE) {
+
+                    System.out.println(
+                            a.getId()
+                                    + " | carteira_id="
+                                    + a.getCarteira().getId()
+                                    + " | criptomoeda_id="
+                                    + a.getCriptomoeda().getId()
+                                    + " | quantidade="
+                                    + a.getQuantidade()
+                                    + " | precoMedio="
+                                    + a.getPrecoMedio()
+                                    + " | valorInvestido="
+                                    + a.getValorInvestido()
+                                    + " | valorAtual="
+                                    + a.getValorAtual()
+                    );
+                }
+            }
+
+            ativoTeste.setQuantidade(
+                    3.0
+            );
+
+            ativoTeste.setPrecoMedio(
+                    550.00
+            );
+
+            ativoTeste.setValorInvestido(
+                    1650.00
+            );
+
+            ativoTeste.setValorAtual(
+                    1800.00
+            );
+
+            ativoDao.alterar(ativoTeste);
+
+            System.out.println(
+                    "Ativo: UPDATE realizado com sucesso."
+            );
+
+            System.out.println(
+                    "\n--- ATIVO APOS UPDATE ---"
+            );
+
+            for (Ativo a : ativoDao.listar()) {
+
+                if (a.getId() == ID_TESTE) {
+
+                    System.out.println(
+                            a.getId()
+                                    + " | quantidade="
+                                    + a.getQuantidade()
+                                    + " | precoMedio="
+                                    + a.getPrecoMedio()
+                                    + " | valorInvestido="
+                                    + a.getValorInvestido()
+                                    + " | valorAtual="
+                                    + a.getValorAtual()
+                    );
+                }
+            }
+
+            ativoDao.excluir(ID_TESTE);
+
+            System.out.println(
+                    "Ativo: DELETE realizado com sucesso."
+            );
+
+            carteiraDao.excluir(ID_TESTE);
+            usuarioDao.excluir(ID_TESTE);
+            criptomoedaDao.excluir(ID_TESTE);
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Erro ao testar CRUD de Ativo: "
+                            + e.getMessage()
+            );
+
+            e.printStackTrace();
+
+        } finally {
+
+            if (ativoDao != null) {
+                try {
+                    ativoDao.fecharConexao();
+                } catch (Exception e) {
+                    System.out.println(
+                            "Erro ao fechar conexao de Ativo: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+
+            if (carteiraDao != null) {
+                try {
+                    carteiraDao.fecharConexao();
+                } catch (Exception e) {
+                    System.out.println(
+                            "Erro ao fechar conexao de Carteira: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+
+            if (usuarioDao != null) {
+                try {
+                    usuarioDao.fecharConexao();
+                } catch (Exception e) {
+                    System.out.println(
+                            "Erro ao fechar conexao de Usuario: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+
+            if (criptomoedaDao != null) {
+                try {
+                    criptomoedaDao.fecharConexao();
+                } catch (Exception e) {
+                    System.out.println(
+                            "Erro ao fechar conexao de Criptomoeda: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+        }
+    }
 }
