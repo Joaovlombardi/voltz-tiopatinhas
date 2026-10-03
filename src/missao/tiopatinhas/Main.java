@@ -6,6 +6,8 @@ import missao.tiopatinhas.dao.CriptomoedaDao;
 import missao.tiopatinhas.dao.UsuarioDao;
 import missao.tiopatinhas.dao.CarteiraDao;
 import missao.tiopatinhas.dao.AtivoDao;
+import missao.tiopatinhas.dao.TransacaoDao;
+import missao.tiopatinhas.dao.AporteDao;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -22,6 +24,7 @@ public class Main {
 
             testarCrudUsuarioCarteira();
             testarCrudAtivo();
+            testarCrudTransacaoAporte();
 
             Usuario usuario = new Usuario(
                     1,
@@ -728,6 +731,316 @@ public class Main {
                 } catch (Exception e) {
                     System.out.println(
                             "Erro ao fechar conexao de Ativo: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+
+            if (carteiraDao != null) {
+                try {
+                    carteiraDao.fecharConexao();
+                } catch (Exception e) {
+                    System.out.println(
+                            "Erro ao fechar conexao de Carteira: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+
+            if (usuarioDao != null) {
+                try {
+                    usuarioDao.fecharConexao();
+                } catch (Exception e) {
+                    System.out.println(
+                            "Erro ao fechar conexao de Usuario: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+
+            if (criptomoedaDao != null) {
+                try {
+                    criptomoedaDao.fecharConexao();
+                } catch (Exception e) {
+                    System.out.println(
+                            "Erro ao fechar conexao de Criptomoeda: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+        }
+    }
+
+    private static void testarCrudTransacaoAporte() {
+
+        TransacaoDao transacaoDao = null;
+        AporteDao aporteDao = null;
+        UsuarioDao usuarioDao = null;
+        CarteiraDao carteiraDao = null;
+        CriptomoedaDao criptomoedaDao = null;
+
+        final int ID_TESTE = 96;
+        final int ID_VENDA_TESTE = 196;
+
+        try {
+
+            transacaoDao = new TransacaoDao();
+            aporteDao = new AporteDao();
+            usuarioDao = new UsuarioDao();
+            carteiraDao = new CarteiraDao();
+            criptomoedaDao = new CriptomoedaDao();
+
+            System.out.println(
+                    "\n=== TESTE CRUD TRANSACAO E APORTE NO BANCO ==="
+            );
+
+            transacaoDao.excluir(ID_VENDA_TESTE);
+            transacaoDao.excluir(ID_TESTE);
+            aporteDao.excluir(ID_TESTE);
+            carteiraDao.excluir(ID_TESTE);
+            usuarioDao.excluir(ID_TESTE);
+            criptomoedaDao.excluir(ID_TESTE);
+
+            Usuario usuarioTeste = new Usuario(
+                    ID_TESTE,
+                    "Usuario Teste Transacao",
+                    "98765432196",
+                    "(11) 96666-9696",
+                    "transacao96@voltz.com",
+                    "hash_transacao_96",
+                    LocalDateTime.now()
+            );
+
+            usuarioDao.inserir(usuarioTeste);
+
+            Carteira carteiraTeste = new Carteira(
+                    ID_TESTE,
+                    usuarioTeste,
+                    3000.00,
+                    3300.00,
+                    300.00,
+                    LocalDateTime.now()
+            );
+
+            carteiraDao.inserir(carteiraTeste);
+
+            Criptomoeda criptomoedaTeste = new Criptomoeda(
+                    ID_TESTE,
+                    "Teste Transacao Coin",
+                    "TTC",
+                    "Criptomoeda temporaria para teste de Transacao"
+            );
+
+            criptomoedaDao.inserir(criptomoedaTeste);
+
+            Aporte aporteTeste = new Aporte(
+                    ID_TESTE,
+                    carteiraTeste,
+                    2500.00,
+                    LocalDateTime.now(),
+                    "Aporte temporario para teste"
+            );
+
+            aporteDao.inserir(aporteTeste);
+
+            System.out.println(
+                    "Aporte: INSERT realizado com sucesso."
+            );
+
+            Compra compraTeste = new Compra(
+                    ID_TESTE,
+                    carteiraTeste,
+                    criptomoedaTeste,
+                    2.0,
+                    500.00,
+                    LocalDateTime.now()
+            );
+
+            transacaoDao.inserir(compraTeste);
+
+            Venda vendaTeste = new Venda(
+                    ID_VENDA_TESTE,
+                    carteiraTeste,
+                    criptomoedaTeste,
+                    0.5,
+                    600.00,
+                    LocalDateTime.now()
+            );
+
+            transacaoDao.inserir(vendaTeste);
+
+            System.out.println(
+                    "Transacao: INSERT de COMPRA e VENDA realizado com sucesso."
+            );
+
+            System.out.println(
+                    "\n--- APORTE APOS INSERT ---"
+            );
+
+            for (Aporte aporte : aporteDao.listar()) {
+
+                if (aporte.getId() == ID_TESTE) {
+
+                    System.out.println(
+                            aporte.getId()
+                                    + " | carteira_id="
+                                    + aporte.getCarteira().getId()
+                                    + " | valor="
+                                    + aporte.getValor()
+                                    + " | descricao="
+                                    + aporte.getDescricao()
+                    );
+                }
+            }
+
+            System.out.println(
+                    "\n--- TRANSACOES APOS INSERT ---"
+            );
+
+            for (Transacao transacao : transacaoDao.listar()) {
+
+                if (
+                        transacao.getId() == ID_TESTE
+                                || transacao.getId() == ID_VENDA_TESTE
+                ) {
+
+                    System.out.println(
+                            transacao.getId()
+                                    + " | carteira_id="
+                                    + transacao.getCarteira().getId()
+                                    + " | criptomoeda_id="
+                                    + transacao.getCriptomoeda().getId()
+                                    + " | tipo="
+                                    + transacao.getTipo()
+                                    + " | quantidade="
+                                    + transacao.getQuantidade()
+                                    + " | precoUnitario="
+                                    + transacao.getPrecoUnitario()
+                                    + " | valorTotal="
+                                    + transacao.getValorTotal()
+                    );
+                }
+            }
+
+            aporteTeste.setValor(
+                    3000.00
+            );
+
+            aporteTeste.setDataHora(
+                    LocalDateTime.now()
+            );
+
+            aporteTeste.setDescricao(
+                    "Aporte atualizado pelo Main"
+            );
+
+            aporteDao.alterar(aporteTeste);
+
+            System.out.println(
+                    "Aporte: UPDATE realizado com sucesso."
+            );
+
+            compraTeste.setQuantidade(
+                    3.0
+            );
+
+            compraTeste.setPrecoUnitario(
+                    550.00
+            );
+
+            compraTeste.setValorTotal(
+                    compraTeste.calcularValorTotal()
+            );
+
+            compraTeste.setDataHora(
+                    LocalDateTime.now()
+            );
+
+            transacaoDao.alterar(compraTeste);
+
+            System.out.println(
+                    "Transacao: UPDATE realizado com sucesso."
+            );
+
+            System.out.println(
+                    "\n--- DADOS APOS UPDATE ---"
+            );
+
+            for (Aporte aporte : aporteDao.listar()) {
+
+                if (aporte.getId() == ID_TESTE) {
+
+                    System.out.println(
+                            "Aporte atualizado: valor="
+                                    + aporte.getValor()
+                                    + " | descricao="
+                                    + aporte.getDescricao()
+                    );
+                }
+            }
+
+            for (Transacao transacao : transacaoDao.listar()) {
+
+                if (transacao.getId() == ID_TESTE) {
+
+                    System.out.println(
+                            "Transacao atualizada: tipo="
+                                    + transacao.getTipo()
+                                    + " | quantidade="
+                                    + transacao.getQuantidade()
+                                    + " | precoUnitario="
+                                    + transacao.getPrecoUnitario()
+                                    + " | valorTotal="
+                                    + transacao.getValorTotal()
+                    );
+                }
+            }
+
+            transacaoDao.excluir(ID_VENDA_TESTE);
+            transacaoDao.excluir(ID_TESTE);
+
+            System.out.println(
+                    "Transacao: DELETE realizado com sucesso."
+            );
+
+            aporteDao.excluir(ID_TESTE);
+
+            System.out.println(
+                    "Aporte: DELETE realizado com sucesso."
+            );
+
+            carteiraDao.excluir(ID_TESTE);
+            usuarioDao.excluir(ID_TESTE);
+            criptomoedaDao.excluir(ID_TESTE);
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Erro ao testar CRUD de Transacao/Aporte: "
+                            + e.getMessage()
+            );
+
+            e.printStackTrace();
+
+        } finally {
+
+            if (transacaoDao != null) {
+                try {
+                    transacaoDao.fecharConexao();
+                } catch (Exception e) {
+                    System.out.println(
+                            "Erro ao fechar conexao de Transacao: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+
+            if (aporteDao != null) {
+                try {
+                    aporteDao.fecharConexao();
+                } catch (Exception e) {
+                    System.out.println(
+                            "Erro ao fechar conexao de Aporte: "
                                     + e.getMessage()
                     );
                 }
