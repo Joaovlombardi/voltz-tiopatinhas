@@ -8,6 +8,8 @@ import missao.tiopatinhas.dao.CarteiraDao;
 import missao.tiopatinhas.dao.AtivoDao;
 import missao.tiopatinhas.dao.TransacaoDao;
 import missao.tiopatinhas.dao.AporteDao;
+import missao.tiopatinhas.dao.FavoritoDao;
+import missao.tiopatinhas.dao.CotacaoDao;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -25,6 +27,7 @@ public class Main {
             testarCrudUsuarioCarteira();
             testarCrudAtivo();
             testarCrudTransacaoAporte();
+            testarCrudFavoritoCotacao();
 
             Usuario usuario = new Usuario(
                     1,
@@ -1052,6 +1055,265 @@ public class Main {
                 } catch (Exception e) {
                     System.out.println(
                             "Erro ao fechar conexao de Carteira: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+
+            if (usuarioDao != null) {
+                try {
+                    usuarioDao.fecharConexao();
+                } catch (Exception e) {
+                    System.out.println(
+                            "Erro ao fechar conexao de Usuario: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+
+            if (criptomoedaDao != null) {
+                try {
+                    criptomoedaDao.fecharConexao();
+                } catch (Exception e) {
+                    System.out.println(
+                            "Erro ao fechar conexao de Criptomoeda: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+        }
+    }
+
+    private static void testarCrudFavoritoCotacao() {
+
+        FavoritoDao favoritoDao = null;
+        CotacaoDao cotacaoDao = null;
+        UsuarioDao usuarioDao = null;
+        CriptomoedaDao criptomoedaDao = null;
+
+        final int ID_TESTE = 95;
+
+        try {
+
+            favoritoDao = new FavoritoDao();
+            cotacaoDao = new CotacaoDao();
+            usuarioDao = new UsuarioDao();
+            criptomoedaDao = new CriptomoedaDao();
+
+            System.out.println(
+                    "\n=== TESTE CRUD FAVORITO E COTACAO NO BANCO ==="
+            );
+
+            favoritoDao.excluir(ID_TESTE);
+            cotacaoDao.excluir(ID_TESTE);
+            usuarioDao.excluir(ID_TESTE);
+            criptomoedaDao.excluir(ID_TESTE);
+
+            Usuario usuarioTeste = new Usuario(
+                    ID_TESTE,
+                    "Usuario Teste Favorito",
+                    "98765432195",
+                    "(11) 95555-9595",
+                    "favorito95@voltz.com",
+                    "hash_favorito_95",
+                    LocalDateTime.now()
+            );
+
+            usuarioDao.inserir(usuarioTeste);
+
+            Criptomoeda criptomoedaTeste = new Criptomoeda(
+                    ID_TESTE,
+                    "Teste Favorito Coin",
+                    "TFC",
+                    "Criptomoeda temporaria para teste de Favorito e Cotacao"
+            );
+
+            criptomoedaDao.inserir(criptomoedaTeste);
+
+            Favorito favoritoTeste = new Favorito(
+                    ID_TESTE,
+                    usuarioTeste,
+                    criptomoedaTeste,
+                    LocalDateTime.now()
+            );
+
+            favoritoDao.inserir(favoritoTeste);
+
+            System.out.println(
+                    "Favorito: INSERT realizado com sucesso."
+            );
+
+            Cotacao cotacaoTeste = new Cotacao(
+                    ID_TESTE,
+                    criptomoedaTeste,
+                    150.00,
+                    1.50,
+                    -2.30,
+                    8.75,
+                    LocalDateTime.now()
+            );
+
+            cotacaoDao.inserir(cotacaoTeste);
+
+            System.out.println(
+                    "Cotacao: INSERT realizado com sucesso."
+            );
+
+            System.out.println(
+                    "\n--- FAVORITO APOS INSERT ---"
+            );
+
+            for (Favorito favorito : favoritoDao.listar()) {
+
+                if (favorito.getId() == ID_TESTE) {
+
+                    System.out.println(
+                            favorito.getId()
+                                    + " | usuario_id="
+                                    + favorito.getUsuario().getId()
+                                    + " | criptomoeda_id="
+                                    + favorito.getCriptomoeda().getId()
+                                    + " | dataAdicionado="
+                                    + favorito.getDataAdicionado()
+                    );
+                }
+            }
+
+            System.out.println(
+                    "\n--- COTACAO APOS INSERT ---"
+            );
+
+            for (Cotacao cotacao : cotacaoDao.listar()) {
+
+                if (cotacao.getId() == ID_TESTE) {
+
+                    System.out.println(
+                            cotacao.getId()
+                                    + " | criptomoeda_id="
+                                    + cotacao.getCriptomoeda().getId()
+                                    + " | precoAtual="
+                                    + cotacao.getPrecoAtual()
+                                    + " | variacao24h="
+                                    + cotacao.getVariacao24h()
+                                    + " | variacao7d="
+                                    + cotacao.getVariacao7d()
+                                    + " | variacao30d="
+                                    + cotacao.getVariacao30d()
+                    );
+                }
+            }
+
+            favoritoTeste.setDataAdicionado(
+                    LocalDateTime.now().minusDays(1)
+            );
+
+            favoritoDao.alterar(favoritoTeste);
+
+            System.out.println(
+                    "Favorito: UPDATE realizado com sucesso."
+            );
+
+            cotacaoTeste.setPrecoAtual(
+                    175.50
+            );
+
+            cotacaoTeste.setVariacao24h(
+                    3.20
+            );
+
+            cotacaoTeste.setVariacao7d(
+                    5.10
+            );
+
+            cotacaoTeste.setVariacao30d(
+                    12.40
+            );
+
+            cotacaoTeste.setDataConsulta(
+                    LocalDateTime.now()
+            );
+
+            cotacaoDao.alterar(cotacaoTeste);
+
+            System.out.println(
+                    "Cotacao: UPDATE realizado com sucesso."
+            );
+
+            System.out.println(
+                    "\n--- DADOS APOS UPDATE ---"
+            );
+
+            for (Favorito favorito : favoritoDao.listar()) {
+
+                if (favorito.getId() == ID_TESTE) {
+
+                    System.out.println(
+                            "Favorito atualizado: dataAdicionado="
+                                    + favorito.getDataAdicionado()
+                    );
+                }
+            }
+
+            for (Cotacao cotacao : cotacaoDao.listar()) {
+
+                if (cotacao.getId() == ID_TESTE) {
+
+                    System.out.println(
+                            "Cotacao atualizada: precoAtual="
+                                    + cotacao.getPrecoAtual()
+                                    + " | variacao24h="
+                                    + cotacao.getVariacao24h()
+                                    + " | variacao7d="
+                                    + cotacao.getVariacao7d()
+                                    + " | variacao30d="
+                                    + cotacao.getVariacao30d()
+                    );
+                }
+            }
+
+            favoritoDao.excluir(ID_TESTE);
+
+            System.out.println(
+                    "Favorito: DELETE realizado com sucesso."
+            );
+
+            cotacaoDao.excluir(ID_TESTE);
+
+            System.out.println(
+                    "Cotacao: DELETE realizado com sucesso."
+            );
+
+            usuarioDao.excluir(ID_TESTE);
+            criptomoedaDao.excluir(ID_TESTE);
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Erro ao testar CRUD de Favorito/Cotacao: "
+                            + e.getMessage()
+            );
+
+            e.printStackTrace();
+
+        } finally {
+
+            if (favoritoDao != null) {
+                try {
+                    favoritoDao.fecharConexao();
+                } catch (Exception e) {
+                    System.out.println(
+                            "Erro ao fechar conexao de Favorito: "
+                                    + e.getMessage()
+                    );
+                }
+            }
+
+            if (cotacaoDao != null) {
+                try {
+                    cotacaoDao.fecharConexao();
+                } catch (Exception e) {
+                    System.out.println(
+                            "Erro ao fechar conexao de Cotacao: "
                                     + e.getMessage()
                     );
                 }
