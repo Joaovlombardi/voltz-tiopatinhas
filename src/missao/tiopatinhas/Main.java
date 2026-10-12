@@ -240,7 +240,7 @@ public class Main {
             // ================= BANCO DE DADOS - CRUD CRIPTOMOEDA =================
             testarCrudCriptomoeda();
 
-            System.out.println("\n=== TESTE EXECUTADO COM SUCESSO ===");
+            System.out.println("\n=== EXECUCAO FINALIZADA - VERIFIQUE OS RESULTADOS DOS TESTES CRUD ===");
 
         } catch (Exception e) {
             System.out.println("ERRO DURANTE EXECUCAO: " + e.getMessage());
