@@ -24,6 +24,12 @@ public class TransacaoDao {
         conexao = ConnectionFactory.getConnection();
     }
 
+    // Permite que varios DAOs compartilhem a mesma conexao
+    public TransacaoDao(Connection conexao) {
+        this.conexao = conexao;
+    }
+
+    // INSERT
     public void inserir(Transacao transacao) throws SQLException {
 
         String sql = """
@@ -56,6 +62,7 @@ public class TransacaoDao {
         }
     }
 
+    // SELECT (todos)
     public List<Transacao> listar() throws SQLException {
 
         String sql = "SELECT * FROM Transacao ORDER BY id";
@@ -67,34 +74,30 @@ public class TransacaoDao {
         ) {
 
             while (result.next()) {
-
-                Carteira carteira = new Carteira();
-                carteira.setId(result.getInt("carteira_id"));
-
-                Criptomoeda criptomoeda = new Criptomoeda();
-                criptomoeda.setId(result.getInt("criptomoeda_id"));
-
-                Timestamp dataHora = result.getTimestamp("dataHora");
-
-                Transacao transacao = criarTransacao(
-                        result.getString("tipo"),
-                        result.getInt("id"),
-                        carteira,
-                        criptomoeda,
-                        result.getDouble("quantidade"),
-                        result.getDouble("precoUnitario"),
-                        dataHora != null ? dataHora.toLocalDateTime() : null
-                );
-
-                transacao.setValorTotal(result.getDouble("valorTotal"));
-                transacoes.add(transacao);
+                transacoes.add(mapear(result));
             }
         }
 
         return transacoes;
     }
 
-    public void alterar(Transacao transacao) throws SQLException {
+    // SELECT (um registro) - devolve null quando o ID nao existe
+    public Transacao buscarPorId(int id) throws SQLException {
+
+        String sql = "SELECT * FROM Transacao WHERE id = ?";
+
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
+
+            stm.setInt(1, id);
+
+            try (ResultSet result = stm.executeQuery()) {
+                return result.next() ? mapear(result) : null;
+            }
+        }
+    }
+
+    // UPDATE - devolve true se o registro existia e foi alterado
+    public boolean alterar(Transacao transacao) throws SQLException {
 
         String sql = """
                 UPDATE Transacao
@@ -119,17 +122,34 @@ public class TransacaoDao {
             definirDataHora(stm, 7, transacao.getDataHora());
             stm.setInt(8, transacao.getId());
 
-            stm.executeUpdate();
+            return stm.executeUpdate() > 0;
         }
     }
 
-    public void excluir(int id) throws SQLException {
+    // DELETE - devolve true se o registro existia e foi excluido
+    public boolean excluir(int id) throws SQLException {
 
         String sql = "DELETE FROM Transacao WHERE id = ?";
 
         try (PreparedStatement stm = conexao.prepareStatement(sql)) {
+
             stm.setInt(1, id);
-            stm.executeUpdate();
+
+            return stm.executeUpdate() > 0;
+        }
+    }
+
+    // Proximo ID livre da tabela
+    public int proximoId() throws SQLException {
+
+        String sql = "SELECT NVL(MAX(id), 0) + 1 FROM Transacao";
+
+        try (
+                PreparedStatement stm = conexao.prepareStatement(sql);
+                ResultSet result = stm.executeQuery()
+        ) {
+            result.next();
+            return result.getInt(1);
         }
     }
 
@@ -138,6 +158,31 @@ public class TransacaoDao {
         if (conexao != null && !conexao.isClosed()) {
             conexao.close();
         }
+    }
+
+    private Transacao mapear(ResultSet result) throws SQLException {
+
+        Carteira carteira = new Carteira();
+        carteira.setId(result.getInt("carteira_id"));
+
+        Criptomoeda criptomoeda = new Criptomoeda();
+        criptomoeda.setId(result.getInt("criptomoeda_id"));
+
+        Timestamp dataHora = result.getTimestamp("dataHora");
+
+        Transacao transacao = criarTransacao(
+                result.getString("tipo"),
+                result.getInt("id"),
+                carteira,
+                criptomoeda,
+                result.getDouble("quantidade"),
+                result.getDouble("precoUnitario"),
+                dataHora != null ? dataHora.toLocalDateTime() : null
+        );
+
+        transacao.setValorTotal(result.getDouble("valorTotal"));
+
+        return transacao;
     }
 
     private Transacao criarTransacao(

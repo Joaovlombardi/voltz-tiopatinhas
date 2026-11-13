@@ -21,6 +21,12 @@ public class CotacaoDao {
         conexao = ConnectionFactory.getConnection();
     }
 
+    // Permite que varios DAOs compartilhem a mesma conexao
+    public CotacaoDao(Connection conexao) {
+        this.conexao = conexao;
+    }
+
+    // INSERT
     public void inserir(Cotacao cotacao) throws SQLException {
 
         String sql = """
@@ -51,6 +57,7 @@ public class CotacaoDao {
         }
     }
 
+    // SELECT (todos)
     public List<Cotacao> listar() throws SQLException {
 
         String sql = "SELECT * FROM Cotacao ORDER BY id";
@@ -62,30 +69,49 @@ public class CotacaoDao {
         ) {
 
             while (result.next()) {
-
-                Criptomoeda criptomoeda = new Criptomoeda();
-                criptomoeda.setId(result.getInt("criptomoeda_id"));
-
-                Timestamp dataConsulta = result.getTimestamp("dataConsulta");
-
-                Cotacao cotacao = new Cotacao(
-                        result.getInt("id"),
-                        criptomoeda,
-                        result.getDouble("precoAtual"),
-                        result.getDouble("variacao24h"),
-                        result.getDouble("variacao7d"),
-                        result.getDouble("variacao30d"),
-                        dataConsulta != null ? dataConsulta.toLocalDateTime() : null
-                );
-
-                cotacoes.add(cotacao);
+                cotacoes.add(mapear(result));
             }
         }
 
         return cotacoes;
     }
 
-    public void alterar(Cotacao cotacao) throws SQLException {
+    // SELECT (um registro) - devolve null quando o ID nao existe
+    public Cotacao buscarPorId(int id) throws SQLException {
+
+        String sql = "SELECT * FROM Cotacao WHERE id = ?";
+
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
+
+            stm.setInt(1, id);
+
+            try (ResultSet result = stm.executeQuery()) {
+                return result.next() ? mapear(result) : null;
+            }
+        }
+    }
+
+    // Cotacao mais recente de uma criptomoeda - devolve null se nao houver nenhuma
+    public Cotacao buscarUltimaPorCriptomoeda(int criptomoedaId) throws SQLException {
+
+        String sql = """
+                SELECT * FROM Cotacao
+                WHERE criptomoeda_id = ?
+                ORDER BY dataConsulta DESC NULLS LAST, id DESC
+                """;
+
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
+
+            stm.setInt(1, criptomoedaId);
+
+            try (ResultSet result = stm.executeQuery()) {
+                return result.next() ? mapear(result) : null;
+            }
+        }
+    }
+
+    // UPDATE - devolve true se o registro existia e foi alterado
+    public boolean alterar(Cotacao cotacao) throws SQLException {
 
         String sql = """
                 UPDATE Cotacao
@@ -108,17 +134,34 @@ public class CotacaoDao {
             definirDataHora(stm, 6, cotacao.getDataConsulta());
             stm.setInt(7, cotacao.getId());
 
-            stm.executeUpdate();
+            return stm.executeUpdate() > 0;
         }
     }
 
-    public void excluir(int id) throws SQLException {
+    // DELETE - devolve true se o registro existia e foi excluido
+    public boolean excluir(int id) throws SQLException {
 
         String sql = "DELETE FROM Cotacao WHERE id = ?";
 
         try (PreparedStatement stm = conexao.prepareStatement(sql)) {
+
             stm.setInt(1, id);
-            stm.executeUpdate();
+
+            return stm.executeUpdate() > 0;
+        }
+    }
+
+    // Proximo ID livre da tabela
+    public int proximoId() throws SQLException {
+
+        String sql = "SELECT NVL(MAX(id), 0) + 1 FROM Cotacao";
+
+        try (
+                PreparedStatement stm = conexao.prepareStatement(sql);
+                ResultSet result = stm.executeQuery()
+        ) {
+            result.next();
+            return result.getInt(1);
         }
     }
 
@@ -127,6 +170,24 @@ public class CotacaoDao {
         if (conexao != null && !conexao.isClosed()) {
             conexao.close();
         }
+    }
+
+    private Cotacao mapear(ResultSet result) throws SQLException {
+
+        Criptomoeda criptomoeda = new Criptomoeda();
+        criptomoeda.setId(result.getInt("criptomoeda_id"));
+
+        Timestamp dataConsulta = result.getTimestamp("dataConsulta");
+
+        return new Cotacao(
+                result.getInt("id"),
+                criptomoeda,
+                result.getDouble("precoAtual"),
+                result.getDouble("variacao24h"),
+                result.getDouble("variacao7d"),
+                result.getDouble("variacao30d"),
+                dataConsulta != null ? dataConsulta.toLocalDateTime() : null
+        );
     }
 
     private void definirDataHora(

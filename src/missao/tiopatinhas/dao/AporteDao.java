@@ -21,6 +21,12 @@ public class AporteDao {
         conexao = ConnectionFactory.getConnection();
     }
 
+    // Permite que varios DAOs compartilhem a mesma conexao
+    public AporteDao(Connection conexao) {
+        this.conexao = conexao;
+    }
+
+    // INSERT
     public void inserir(Aporte aporte) throws SQLException {
 
         String sql = """
@@ -47,6 +53,7 @@ public class AporteDao {
         }
     }
 
+    // SELECT (todos)
     public List<Aporte> listar() throws SQLException {
 
         String sql = "SELECT * FROM Aporte ORDER BY id";
@@ -58,28 +65,30 @@ public class AporteDao {
         ) {
 
             while (result.next()) {
-
-                Carteira carteira = new Carteira();
-                carteira.setId(result.getInt("carteira_id"));
-
-                Timestamp dataHora = result.getTimestamp("dataHora");
-
-                Aporte aporte = new Aporte(
-                        result.getInt("id"),
-                        carteira,
-                        result.getDouble("valor"),
-                        dataHora != null ? dataHora.toLocalDateTime() : null,
-                        result.getString("descricao")
-                );
-
-                aportes.add(aporte);
+                aportes.add(mapear(result));
             }
         }
 
         return aportes;
     }
 
-    public void alterar(Aporte aporte) throws SQLException {
+    // SELECT (um registro) - devolve null quando o ID nao existe
+    public Aporte buscarPorId(int id) throws SQLException {
+
+        String sql = "SELECT * FROM Aporte WHERE id = ?";
+
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
+
+            stm.setInt(1, id);
+
+            try (ResultSet result = stm.executeQuery()) {
+                return result.next() ? mapear(result) : null;
+            }
+        }
+    }
+
+    // UPDATE - devolve true se o registro existia e foi alterado
+    public boolean alterar(Aporte aporte) throws SQLException {
 
         String sql = """
                 UPDATE Aporte
@@ -98,17 +107,34 @@ public class AporteDao {
             stm.setString(4, aporte.getDescricao());
             stm.setInt(5, aporte.getId());
 
-            stm.executeUpdate();
+            return stm.executeUpdate() > 0;
         }
     }
 
-    public void excluir(int id) throws SQLException {
+    // DELETE - devolve true se o registro existia e foi excluido
+    public boolean excluir(int id) throws SQLException {
 
         String sql = "DELETE FROM Aporte WHERE id = ?";
 
         try (PreparedStatement stm = conexao.prepareStatement(sql)) {
+
             stm.setInt(1, id);
-            stm.executeUpdate();
+
+            return stm.executeUpdate() > 0;
+        }
+    }
+
+    // Proximo ID livre da tabela
+    public int proximoId() throws SQLException {
+
+        String sql = "SELECT NVL(MAX(id), 0) + 1 FROM Aporte";
+
+        try (
+                PreparedStatement stm = conexao.prepareStatement(sql);
+                ResultSet result = stm.executeQuery()
+        ) {
+            result.next();
+            return result.getInt(1);
         }
     }
 
@@ -117,6 +143,22 @@ public class AporteDao {
         if (conexao != null && !conexao.isClosed()) {
             conexao.close();
         }
+    }
+
+    private Aporte mapear(ResultSet result) throws SQLException {
+
+        Carteira carteira = new Carteira();
+        carteira.setId(result.getInt("carteira_id"));
+
+        Timestamp dataHora = result.getTimestamp("dataHora");
+
+        return new Aporte(
+                result.getInt("id"),
+                carteira,
+                result.getDouble("valor"),
+                dataHora != null ? dataHora.toLocalDateTime() : null,
+                result.getString("descricao")
+        );
     }
 
     private void definirDataHora(
