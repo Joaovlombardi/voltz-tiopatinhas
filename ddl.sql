@@ -121,6 +121,14 @@ ADD CONSTRAINT ck_aporte_valor CHECK (valor > 0);
 ALTER TABLE Carteira
 ADD dataAtualizacao TIMESTAMP;
 
+-- Fase 7: criptomoedas sao negociadas em fracoes pequenas (ex.: 0,00150000 BTC).
+-- Com 2 casas decimais o Oracle arredondava essas quantidades; agora sao 8 casas.
+ALTER TABLE Ativo
+MODIFY (quantidade NUMBER(21,8));
+
+ALTER TABLE Transacao
+MODIFY (quantidade NUMBER(21,8));
+
 -- =========================================================
 -- DROP
 -- Exemplo de exclusao de estrutura sem remover tabelas finais do projeto. A tabela abaixo e criada apenas para demonstrar o comando DROP TABLE.
