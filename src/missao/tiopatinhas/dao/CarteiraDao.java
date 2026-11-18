@@ -17,16 +17,17 @@ public class CarteiraDao {
 
     private final Connection conexao;
 
-    public CarteiraDao()
-            throws SQLException {
+    public CarteiraDao() throws SQLException {
+        conexao = ConnectionFactory.getConnection();
+    }
 
-        conexao =
-                ConnectionFactory.getConnection();
+    // Permite que varios DAOs compartilhem a mesma conexao
+    public CarteiraDao(Connection conexao) {
+        this.conexao = conexao;
     }
 
     // INSERT
-    public void inserir(Carteira carteira)
-            throws SQLException {
+    public void inserir(Carteira carteira) throws SQLException {
 
         String sql = """
                 INSERT INTO Carteira
@@ -41,125 +42,55 @@ public class CarteiraDao {
                 VALUES (?, ?, ?, ?, ?, ?)
                 """;
 
-        try (PreparedStatement stm =
-                     conexao.prepareStatement(sql)) {
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
 
-            stm.setInt(
-                    1,
-                    carteira.getId()
-            );
-
-            stm.setInt(
-                    2,
-                    carteira
-                            .getUsuario()
-                            .getId()
-            );
-
-            stm.setDouble(
-                    3,
-                    carteira
-                            .getValorTotalInvestido()
-            );
-
-            stm.setDouble(
-                    4,
-                    carteira.getValorAtual()
-            );
-
-            stm.setDouble(
-                    5,
-                    carteira.getLucroPrejuizo()
-            );
-
-            if (
-                    carteira.getDataAtualizacao()
-                            != null
-            ) {
-
-                stm.setTimestamp(
-                        6,
-                        Timestamp.valueOf(
-                                carteira
-                                        .getDataAtualizacao()
-                        )
-                );
-
-            } else {
-
-                stm.setNull(
-                        6,
-                        Types.TIMESTAMP
-                );
-            }
+            stm.setInt(1, carteira.getId());
+            stm.setInt(2, carteira.getUsuario().getId());
+            stm.setDouble(3, carteira.getValorTotalInvestido());
+            stm.setDouble(4, carteira.getValorAtual());
+            stm.setDouble(5, carteira.getLucroPrejuizo());
+            definirDataHora(stm, 6, carteira.getDataAtualizacao());
 
             stm.executeUpdate();
         }
     }
 
-    // SELECT
-    public List<Carteira> listar()
-            throws SQLException {
+    // SELECT (todos)
+    public List<Carteira> listar() throws SQLException {
 
-        String sql =
-                "SELECT * FROM Carteira ORDER BY id";
-
-        List<Carteira> carteiras =
-                new ArrayList<>();
+        String sql = "SELECT * FROM Carteira ORDER BY id";
+        List<Carteira> carteiras = new ArrayList<>();
 
         try (
-                PreparedStatement stm =
-                        conexao.prepareStatement(sql);
-
-                ResultSet result =
-                        stm.executeQuery()
+                PreparedStatement stm = conexao.prepareStatement(sql);
+                ResultSet result = stm.executeQuery()
         ) {
 
             while (result.next()) {
-
-                Usuario usuario =
-                        new Usuario();
-
-                usuario.setId(
-                        result.getInt(
-                                "usuario_id"
-                        )
-                );
-
-                Timestamp dataAtualizacao =
-                        result.getTimestamp(
-                                "dataAtualizacao"
-                        );
-
-                Carteira carteira =
-                        new Carteira(
-                                result.getInt("id"),
-                                usuario,
-                                result.getDouble(
-                                        "valorTotalInvestido"
-                                ),
-                                result.getDouble(
-                                        "valorAtual"
-                                ),
-                                result.getDouble(
-                                        "lucroPrejuizo"
-                                ),
-                                dataAtualizacao != null
-                                        ? dataAtualizacao
-                                        .toLocalDateTime()
-                                        : null
-                        );
-
-                carteiras.add(carteira);
+                carteiras.add(mapear(result));
             }
         }
 
         return carteiras;
     }
 
-    // UPDATE
-    public void alterar(Carteira carteira)
-            throws SQLException {
+    // SELECT (um registro) - devolve null quando o ID nao existe
+    public Carteira buscarPorId(int id) throws SQLException {
+
+        String sql = "SELECT * FROM Carteira WHERE id = ?";
+
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
+
+            stm.setInt(1, id);
+
+            try (ResultSet result = stm.executeQuery()) {
+                return result.next() ? mapear(result) : null;
+            }
+        }
+    }
+
+    // UPDATE - devolve true se o registro existia e foi alterado
+    public boolean alterar(Carteira carteira) throws SQLException {
 
         String sql = """
                 UPDATE Carteira
@@ -171,86 +102,80 @@ public class CarteiraDao {
                 WHERE id = ?
                 """;
 
-        try (PreparedStatement stm =
-                     conexao.prepareStatement(sql)) {
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
 
-            stm.setInt(
-                    1,
-                    carteira
-                            .getUsuario()
-                            .getId()
-            );
+            stm.setInt(1, carteira.getUsuario().getId());
+            stm.setDouble(2, carteira.getValorTotalInvestido());
+            stm.setDouble(3, carteira.getValorAtual());
+            stm.setDouble(4, carteira.getLucroPrejuizo());
+            definirDataHora(stm, 5, carteira.getDataAtualizacao());
+            stm.setInt(6, carteira.getId());
 
-            stm.setDouble(
-                    2,
-                    carteira
-                            .getValorTotalInvestido()
-            );
-
-            stm.setDouble(
-                    3,
-                    carteira.getValorAtual()
-            );
-
-            stm.setDouble(
-                    4,
-                    carteira.getLucroPrejuizo()
-            );
-
-            if (
-                    carteira.getDataAtualizacao()
-                            != null
-            ) {
-
-                stm.setTimestamp(
-                        5,
-                        Timestamp.valueOf(
-                                carteira
-                                        .getDataAtualizacao()
-                        )
-                );
-
-            } else {
-
-                stm.setNull(
-                        5,
-                        Types.TIMESTAMP
-                );
-            }
-
-            stm.setInt(
-                    6,
-                    carteira.getId()
-            );
-
-            stm.executeUpdate();
+            return stm.executeUpdate() > 0;
         }
     }
 
-    // DELETE
-    public void excluir(int id)
-            throws SQLException {
+    // DELETE - devolve true se o registro existia e foi excluido
+    public boolean excluir(int id) throws SQLException {
 
-        String sql =
-                "DELETE FROM Carteira WHERE id = ?";
+        String sql = "DELETE FROM Carteira WHERE id = ?";
 
-        try (PreparedStatement stm =
-                     conexao.prepareStatement(sql)) {
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
 
             stm.setInt(1, id);
 
-            stm.executeUpdate();
+            return stm.executeUpdate() > 0;
         }
     }
 
-    public void fecharConexao()
-            throws SQLException {
+    // Proximo ID livre da tabela
+    public int proximoId() throws SQLException {
 
-        if (
-                conexao != null
-                        && !conexao.isClosed()
+        String sql = "SELECT NVL(MAX(id), 0) + 1 FROM Carteira";
+
+        try (
+                PreparedStatement stm = conexao.prepareStatement(sql);
+                ResultSet result = stm.executeQuery()
         ) {
+            result.next();
+            return result.getInt(1);
+        }
+    }
+
+    public void fecharConexao() throws SQLException {
+
+        if (conexao != null && !conexao.isClosed()) {
             conexao.close();
+        }
+    }
+
+    private Carteira mapear(ResultSet result) throws SQLException {
+
+        Usuario usuario = new Usuario();
+        usuario.setId(result.getInt("usuario_id"));
+
+        Timestamp dataAtualizacao = result.getTimestamp("dataAtualizacao");
+
+        return new Carteira(
+                result.getInt("id"),
+                usuario,
+                result.getDouble("valorTotalInvestido"),
+                result.getDouble("valorAtual"),
+                result.getDouble("lucroPrejuizo"),
+                dataAtualizacao != null ? dataAtualizacao.toLocalDateTime() : null
+        );
+    }
+
+    private void definirDataHora(
+            PreparedStatement stm,
+            int indice,
+            java.time.LocalDateTime dataHora
+    ) throws SQLException {
+
+        if (dataHora != null) {
+            stm.setTimestamp(indice, Timestamp.valueOf(dataHora));
+        } else {
+            stm.setNull(indice, Types.TIMESTAMP);
         }
     }
 }

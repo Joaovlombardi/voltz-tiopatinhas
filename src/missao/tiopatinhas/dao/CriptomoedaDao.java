@@ -12,10 +12,15 @@ import java.util.List;
 
 public class CriptomoedaDao {
 
-    private Connection conexao;
+    private final Connection conexao;
 
     public CriptomoedaDao() throws SQLException {
         conexao = ConnectionFactory.getConnection();
+    }
+
+    // Permite que varios DAOs compartilhem a mesma conexao
+    public CriptomoedaDao(Connection conexao) {
+        this.conexao = conexao;
     }
 
     // INSERT
@@ -27,47 +32,53 @@ public class CriptomoedaDao {
                 VALUES (?, ?, ?, ?)
                 """;
 
-        PreparedStatement stm = conexao.prepareStatement(sql);
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
 
-        stm.setInt(1, criptomoeda.getId());
-        stm.setString(2, criptomoeda.getNome());
-        stm.setString(3, criptomoeda.getSimbolo());
-        stm.setString(4, criptomoeda.getDescricao());
+            stm.setInt(1, criptomoeda.getId());
+            stm.setString(2, criptomoeda.getNome());
+            stm.setString(3, criptomoeda.getSimbolo());
+            stm.setString(4, criptomoeda.getDescricao());
 
-        stm.executeUpdate();
-        stm.close();
+            stm.executeUpdate();
+        }
     }
 
-    // SELECT
+    // SELECT (todos)
     public List<Criptomoeda> listar() throws SQLException {
 
         String sql = "SELECT * FROM Criptomoeda ORDER BY id";
-
-        PreparedStatement stm = conexao.prepareStatement(sql);
-        ResultSet result = stm.executeQuery();
-
         List<Criptomoeda> lista = new ArrayList<>();
 
-        while (result.next()) {
+        try (
+                PreparedStatement stm = conexao.prepareStatement(sql);
+                ResultSet result = stm.executeQuery()
+        ) {
 
-            Criptomoeda criptomoeda = new Criptomoeda(
-                    result.getInt("id"),
-                    result.getString("nome"),
-                    result.getString("simbolo"),
-                    result.getString("descricao")
-            );
-
-            lista.add(criptomoeda);
+            while (result.next()) {
+                lista.add(mapear(result));
+            }
         }
-
-        result.close();
-        stm.close();
 
         return lista;
     }
 
-    // UPDATE
-    public void alterar(Criptomoeda criptomoeda) throws SQLException {
+    // SELECT (um registro) - devolve null quando o ID nao existe
+    public Criptomoeda buscarPorId(int id) throws SQLException {
+
+        String sql = "SELECT * FROM Criptomoeda WHERE id = ?";
+
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
+
+            stm.setInt(1, id);
+
+            try (ResultSet result = stm.executeQuery()) {
+                return result.next() ? mapear(result) : null;
+            }
+        }
+    }
+
+    // UPDATE - devolve true se o registro existia e foi alterado
+    public boolean alterar(Criptomoeda criptomoeda) throws SQLException {
 
         String sql = """
                 UPDATE Criptomoeda
@@ -75,31 +86,58 @@ public class CriptomoedaDao {
                 WHERE id = ?
                 """;
 
-        PreparedStatement stm = conexao.prepareStatement(sql);
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
 
-        stm.setString(1, criptomoeda.getNome());
-        stm.setString(2, criptomoeda.getSimbolo());
-        stm.setString(3, criptomoeda.getDescricao());
-        stm.setInt(4, criptomoeda.getId());
+            stm.setString(1, criptomoeda.getNome());
+            stm.setString(2, criptomoeda.getSimbolo());
+            stm.setString(3, criptomoeda.getDescricao());
+            stm.setInt(4, criptomoeda.getId());
 
-        stm.executeUpdate();
-        stm.close();
+            return stm.executeUpdate() > 0;
+        }
     }
 
-    // DELETE
-    public void excluir(int id) throws SQLException {
+    // DELETE - devolve true se o registro existia e foi excluido
+    public boolean excluir(int id) throws SQLException {
 
         String sql = "DELETE FROM Criptomoeda WHERE id = ?";
 
-        PreparedStatement stm = conexao.prepareStatement(sql);
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
 
-        stm.setInt(1, id);
+            stm.setInt(1, id);
 
-        stm.executeUpdate();
-        stm.close();
+            return stm.executeUpdate() > 0;
+        }
+    }
+
+    // Proximo ID livre da tabela
+    public int proximoId() throws SQLException {
+
+        String sql = "SELECT NVL(MAX(id), 0) + 1 FROM Criptomoeda";
+
+        try (
+                PreparedStatement stm = conexao.prepareStatement(sql);
+                ResultSet result = stm.executeQuery()
+        ) {
+            result.next();
+            return result.getInt(1);
+        }
     }
 
     public void fecharConexao() throws SQLException {
-        conexao.close();
+
+        if (conexao != null && !conexao.isClosed()) {
+            conexao.close();
+        }
+    }
+
+    private Criptomoeda mapear(ResultSet result) throws SQLException {
+
+        return new Criptomoeda(
+                result.getInt("id"),
+                result.getString("nome"),
+                result.getString("simbolo"),
+                result.getString("descricao")
+        );
     }
 }

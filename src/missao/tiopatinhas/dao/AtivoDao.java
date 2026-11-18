@@ -21,6 +21,12 @@ public class AtivoDao {
         conexao = ConnectionFactory.getConnection();
     }
 
+    // Permite que varios DAOs compartilhem a mesma conexao
+    public AtivoDao(Connection conexao) {
+        this.conexao = conexao;
+    }
+
+    // INSERT
     public void inserir(Ativo ativo) throws SQLException {
 
         String sql = """
@@ -40,106 +46,53 @@ public class AtivoDao {
         try (PreparedStatement stm = conexao.prepareStatement(sql)) {
 
             stm.setInt(1, ativo.getId());
-
-            stm.setInt(
-                    2,
-                    ativo.getCarteira().getId()
-            );
-
-            stm.setInt(
-                    3,
-                    ativo.getCriptomoeda().getId()
-            );
-
-            stm.setDouble(
-                    4,
-                    ativo.getQuantidade()
-            );
-
-            stm.setDouble(
-                    5,
-                    ativo.getPrecoMedio()
-            );
-
-            stm.setDouble(
-                    6,
-                    ativo.getValorInvestido()
-            );
-
-            stm.setDouble(
-                    7,
-                    ativo.getValorAtual()
-            );
+            stm.setInt(2, ativo.getCarteira().getId());
+            stm.setInt(3, ativo.getCriptomoeda().getId());
+            stm.setDouble(4, ativo.getQuantidade());
+            stm.setDouble(5, ativo.getPrecoMedio());
+            stm.setDouble(6, ativo.getValorInvestido());
+            stm.setDouble(7, ativo.getValorAtual());
 
             stm.executeUpdate();
         }
     }
 
+    // SELECT (todos)
     public List<Ativo> listar() throws SQLException {
 
-        String sql =
-                "SELECT * FROM Ativo ORDER BY id";
-
+        String sql = "SELECT * FROM Ativo ORDER BY id";
         List<Ativo> ativos = new ArrayList<>();
 
         try (
-                PreparedStatement stm =
-                        conexao.prepareStatement(sql);
-
-                ResultSet result =
-                        stm.executeQuery()
+                PreparedStatement stm = conexao.prepareStatement(sql);
+                ResultSet result = stm.executeQuery()
         ) {
 
             while (result.next()) {
-
-                Carteira carteira = new Carteira();
-                carteira.setId(
-                        result.getInt("carteira_id")
-                );
-
-                Criptomoeda criptomoeda =
-                        new Criptomoeda();
-
-                criptomoeda.setId(
-                        result.getInt("criptomoeda_id")
-                );
-
-                Ativo ativo = new Ativo();
-
-                ativo.setId(
-                        result.getInt("id")
-                );
-
-                ativo.setCarteira(carteira);
-
-                ativo.setCriptomoeda(
-                        criptomoeda
-                );
-
-                ativo.setQuantidade(
-                        result.getDouble("quantidade")
-                );
-
-                ativo.setPrecoMedio(
-                        result.getDouble("precoMedio")
-                );
-
-                ativo.setValorInvestido(
-                        result.getDouble("valorInvestido")
-                );
-
-                ativo.setValorAtual(
-                        result.getDouble("valorAtual")
-                );
-
-                ativos.add(ativo);
+                ativos.add(mapear(result));
             }
         }
 
         return ativos;
     }
 
-    public void alterar(Ativo ativo) throws SQLException {
+    // SELECT (um registro) - devolve null quando o ID nao existe
+    public Ativo buscarPorId(int id) throws SQLException {
+
+        String sql = "SELECT * FROM Ativo WHERE id = ?";
+
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
+
+            stm.setInt(1, id);
+
+            try (ResultSet result = stm.executeQuery()) {
+                return result.next() ? mapear(result) : null;
+            }
+        }
+    }
+
+    // UPDATE - devolve true se o registro existia e foi alterado
+    public boolean alterar(Ativo ativo) throws SQLException {
 
         String sql = """
             UPDATE Ativo
@@ -154,56 +107,42 @@ public class AtivoDao {
 
         try (PreparedStatement stm = conexao.prepareStatement(sql)) {
 
-            stm.setInt(
-                    1,
-                    ativo.getCarteira().getId()
-            );
+            stm.setInt(1, ativo.getCarteira().getId());
+            stm.setInt(2, ativo.getCriptomoeda().getId());
+            stm.setDouble(3, ativo.getQuantidade());
+            stm.setDouble(4, ativo.getPrecoMedio());
+            stm.setDouble(5, ativo.getValorInvestido());
+            stm.setDouble(6, ativo.getValorAtual());
+            stm.setInt(7, ativo.getId());
 
-            stm.setInt(
-                    2,
-                    ativo.getCriptomoeda().getId()
-            );
-
-            stm.setDouble(
-                    3,
-                    ativo.getQuantidade()
-            );
-
-            stm.setDouble(
-                    4,
-                    ativo.getPrecoMedio()
-            );
-
-            stm.setDouble(
-                    5,
-                    ativo.getValorInvestido()
-            );
-
-            stm.setDouble(
-                    6,
-                    ativo.getValorAtual()
-            );
-
-            stm.setInt(
-                    7,
-                    ativo.getId()
-            );
-
-            stm.executeUpdate();
+            return stm.executeUpdate() > 0;
         }
     }
 
-    public void excluir(int id) throws SQLException {
+    // DELETE - devolve true se o registro existia e foi excluido
+    public boolean excluir(int id) throws SQLException {
 
-        String sql =
-                "DELETE FROM Ativo WHERE id = ?";
+        String sql = "DELETE FROM Ativo WHERE id = ?";
 
-        try (PreparedStatement stm =
-                     conexao.prepareStatement(sql)) {
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
 
             stm.setInt(1, id);
 
-            stm.executeUpdate();
+            return stm.executeUpdate() > 0;
+        }
+    }
+
+    // Proximo ID livre da tabela
+    public int proximoId() throws SQLException {
+
+        String sql = "SELECT NVL(MAX(id), 0) + 1 FROM Ativo";
+
+        try (
+                PreparedStatement stm = conexao.prepareStatement(sql);
+                ResultSet result = stm.executeQuery()
+        ) {
+            result.next();
+            return result.getInt(1);
         }
     }
 
@@ -212,5 +151,26 @@ public class AtivoDao {
         if (conexao != null && !conexao.isClosed()) {
             conexao.close();
         }
+    }
+
+    private Ativo mapear(ResultSet result) throws SQLException {
+
+        Carteira carteira = new Carteira();
+        carteira.setId(result.getInt("carteira_id"));
+
+        Criptomoeda criptomoeda = new Criptomoeda();
+        criptomoeda.setId(result.getInt("criptomoeda_id"));
+
+        Ativo ativo = new Ativo();
+
+        ativo.setId(result.getInt("id"));
+        ativo.setCarteira(carteira);
+        ativo.setCriptomoeda(criptomoeda);
+        ativo.setQuantidade(result.getDouble("quantidade"));
+        ativo.setPrecoMedio(result.getDouble("precoMedio"));
+        ativo.setValorInvestido(result.getDouble("valorInvestido"));
+        ativo.setValorAtual(result.getDouble("valorAtual"));
+
+        return ativo;
     }
 }

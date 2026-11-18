@@ -22,6 +22,12 @@ public class FavoritoDao {
         conexao = ConnectionFactory.getConnection();
     }
 
+    // Permite que varios DAOs compartilhem a mesma conexao
+    public FavoritoDao(Connection conexao) {
+        this.conexao = conexao;
+    }
+
+    // INSERT
     public void inserir(Favorito favorito) throws SQLException {
 
         String sql = """
@@ -46,6 +52,7 @@ public class FavoritoDao {
         }
     }
 
+    // SELECT (todos)
     public List<Favorito> listar() throws SQLException {
 
         String sql = "SELECT * FROM Favorito ORDER BY id";
@@ -57,30 +64,30 @@ public class FavoritoDao {
         ) {
 
             while (result.next()) {
-
-                Usuario usuario = new Usuario();
-                usuario.setId(result.getInt("usuario_id"));
-
-                Criptomoeda criptomoeda = new Criptomoeda();
-                criptomoeda.setId(result.getInt("criptomoeda_id"));
-
-                Timestamp dataAdicionado = result.getTimestamp("dataAdicionado");
-
-                Favorito favorito = new Favorito(
-                        result.getInt("id"),
-                        usuario,
-                        criptomoeda,
-                        dataAdicionado != null ? dataAdicionado.toLocalDateTime() : null
-                );
-
-                favoritos.add(favorito);
+                favoritos.add(mapear(result));
             }
         }
 
         return favoritos;
     }
 
-    public void alterar(Favorito favorito) throws SQLException {
+    // SELECT (um registro) - devolve null quando o ID nao existe
+    public Favorito buscarPorId(int id) throws SQLException {
+
+        String sql = "SELECT * FROM Favorito WHERE id = ?";
+
+        try (PreparedStatement stm = conexao.prepareStatement(sql)) {
+
+            stm.setInt(1, id);
+
+            try (ResultSet result = stm.executeQuery()) {
+                return result.next() ? mapear(result) : null;
+            }
+        }
+    }
+
+    // UPDATE - devolve true se o registro existia e foi alterado
+    public boolean alterar(Favorito favorito) throws SQLException {
 
         String sql = """
                 UPDATE Favorito
@@ -97,17 +104,34 @@ public class FavoritoDao {
             definirDataHora(stm, 3, favorito.getDataAdicionado());
             stm.setInt(4, favorito.getId());
 
-            stm.executeUpdate();
+            return stm.executeUpdate() > 0;
         }
     }
 
-    public void excluir(int id) throws SQLException {
+    // DELETE - devolve true se o registro existia e foi excluido
+    public boolean excluir(int id) throws SQLException {
 
         String sql = "DELETE FROM Favorito WHERE id = ?";
 
         try (PreparedStatement stm = conexao.prepareStatement(sql)) {
+
             stm.setInt(1, id);
-            stm.executeUpdate();
+
+            return stm.executeUpdate() > 0;
+        }
+    }
+
+    // Proximo ID livre da tabela
+    public int proximoId() throws SQLException {
+
+        String sql = "SELECT NVL(MAX(id), 0) + 1 FROM Favorito";
+
+        try (
+                PreparedStatement stm = conexao.prepareStatement(sql);
+                ResultSet result = stm.executeQuery()
+        ) {
+            result.next();
+            return result.getInt(1);
         }
     }
 
@@ -116,6 +140,24 @@ public class FavoritoDao {
         if (conexao != null && !conexao.isClosed()) {
             conexao.close();
         }
+    }
+
+    private Favorito mapear(ResultSet result) throws SQLException {
+
+        Usuario usuario = new Usuario();
+        usuario.setId(result.getInt("usuario_id"));
+
+        Criptomoeda criptomoeda = new Criptomoeda();
+        criptomoeda.setId(result.getInt("criptomoeda_id"));
+
+        Timestamp dataAdicionado = result.getTimestamp("dataAdicionado");
+
+        return new Favorito(
+                result.getInt("id"),
+                usuario,
+                criptomoeda,
+                dataAdicionado != null ? dataAdicionado.toLocalDateTime() : null
+        );
     }
 
     private void definirDataHora(
