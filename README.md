@@ -1,71 +1,27 @@
 # VOLTZ — Missão Tio Patinhas
 
-Projeto acadêmico desenvolvido em **Java** para simular o gerenciamento de uma carteira de investimentos em criptomoedas. O sistema reúne conceitos de orientação a objetos, estruturas de dados, manipulação de arquivos e persistência em banco de dados **Oracle** por meio de **JDBC**.
+Gerenciador de carteiras de criptomoedas em **Java**, executado no console e com persistência em banco de dados **Oracle** via **JDBC**. Projeto acadêmico da FIAP.
 
-## Objetivo
+## Sobre o projeto
 
-Modelar usuários, carteiras, criptomoedas e operações financeiras, demonstrando os relacionamentos entre entidades e as operações de cadastro, consulta, atualização e exclusão de dados (**CRUD**).
+O sistema cadastra usuários, carteiras, criptomoedas, ativos, transações, aportes, favoritos e cotações. Cada um desses módulos tem um menu próprio com as operações de inclusão, alteração, exclusão e consulta, todas gravadas diretamente no Oracle.
 
-## Tecnologias utilizadas
+## Funcionalidades
 
-- **Java 17** — versão de linguagem configurada no projeto.
-- **Maven** — gerenciamento das dependências e compilação.
-- **Oracle Database e JDBC** — persistência dos dados.
-- **Oracle JDBC (`ojdbc8`, versão `23.2.0.0`)** — driver declarado no `pom.xml`.
-- **IntelliJ IDEA** — ambiente utilizado no desenvolvimento e nos testes.
-- **SQL** — criação, relacionamento e manipulação das tabelas.
+O menu principal dá acesso a oito módulos:
 
-## Estrutura do projeto
+| Módulo | Tabela | O que representa |
+| --- | --- | --- |
+| Usuários | `USUARIO` | Pessoas cadastradas no sistema |
+| Carteiras | `CARTEIRA` | Carteira de investimentos de um usuário |
+| Criptomoedas | `CRIPTOMOEDA` | Moedas disponíveis para negociação |
+| Ativos | `ATIVO` | Quantidade de uma criptomoeda em uma carteira |
+| Transações | `TRANSACAO` | Compras e vendas realizadas |
+| Aportes | `APORTE` | Depósitos feitos em uma carteira |
+| Favoritos | `FAVORITO` | Criptomoedas acompanhadas por um usuário |
+| Cotações | `COTACAO` | Preço e variação de uma criptomoeda |
 
-| Caminho | Responsabilidade |
-| --- | --- |
-| `src/missao/tiopatinhas/model/` | Classes de domínio e relacionamentos |
-| `src/missao/tiopatinhas/dao/` | Classes DAO responsáveis pelas operações CRUD |
-| `src/missao/tiopatinhas/factory/ConnectionFactory.java` | Conexão com o Oracle via JDBC |
-| `src/missao/tiopatinhas/service/ApiCotacaoService.java` | Simulação de um serviço de cotações |
-| `src/missao/tiopatinhas/view/` | Submenus de console, um por módulo (`MenuBase` e classes `*Menu`) |
-| `src/missao/tiopatinhas/util/` | Leitura do teclado (`Console`) e regras de validação (`Validador`) |
-| `src/missao/tiopatinhas/Main.java` | Programa principal: conexão com o banco e menu de módulos |
-| `ddl.sql` | Criação das tabelas, chaves e restrições |
-| `dml.sql` | Carga de dados e exemplos de comandos SQL |
-| `dados_voltz.txt` | Arquivo utilizado no teste de gravação e leitura |
-| `DOCUMENTACAO.md` | Documentação complementar da modelagem |
-
-## Funcionalidades implementadas
-
-### Modelagem e orientação a objetos
-
-- **Usuario:** dados cadastrais, carteiras e criptomoedas favoritas.
-- **Carteira:** organização de ativos, transações e aportes; valores investidos e atuais.
-- **Criptomoeda:** identificação por nome, símbolo e descrição.
-- **Ativo:** vínculo entre uma carteira e uma criptomoeda.
-- **Transacao, Compra e Venda:** representação das operações de compra e venda, utilizando herança e polimorfismo.
-- **Aporte:** registro de aportes financeiros na carteira.
-- **Favorito:** vínculo entre usuário e criptomoeda.
-- **Cotacao:** preços e variações de criptomoedas.
-
-O projeto também demonstra **herança, classes abstratas, sobrescrita e sobrecarga de métodos, tratamento de exceções, `ArrayList` e `HashMap`**. O serviço `ApiCotacaoService` simula cotações; não realiza consulta a uma API externa em tempo real.
-
-### Persistência no Oracle — 8 classes DAO
-
-As seguintes classes implementam operações de **inserir, listar, buscar por ID, alterar e excluir** registros:
-
-| Classe DAO | Tabela correspondente |
-| --- | --- |
-| `UsuarioDao` | `USUARIO` |
-| `CarteiraDao` | `CARTEIRA` |
-| `CriptomoedaDao` | `CRIPTOMOEDA` |
-| `AtivoDao` | `ATIVO` |
-| `TransacaoDao` | `TRANSACAO` |
-| `AporteDao` | `APORTE` |
-| `FavoritoDao` | `FAVORITO` |
-| `CotacaoDao` | `COTACAO` |
-
-Os relacionamentos são definidos por **chaves primárias e estrangeiras (PKs e FKs)**. O SQL também demonstra restrições como `UNIQUE` e `CHECK`.
-
-### Programa de console — Fase 7
-
-O `Main` é um programa interativo. O menu principal dá acesso a oito módulos (Usuários, Carteiras, Criptomoedas, Ativos, Transações, Aportes, Favoritos e Cotações), e cada módulo abre um submenu com:
+Cada módulo abre um submenu com as mesmas opções:
 
 1. Incluir
 2. Alterar
@@ -73,68 +29,116 @@ O `Main` é um programa interativo. O menu principal dá acesso a oito módulos 
 4. Exibir todos
 5. Exibir um registro
 
-Alguns módulos têm opções extras: recalcular os valores da carteira a partir dos ativos, atualizar o valor atual dos ativos pelas últimas cotações e exibir as transações de uma carteira.
+Três módulos têm uma opção a mais:
 
-Os IDs são gerados automaticamente. Na alteração, pressionar ENTER mantém o valor atual do campo.
+- **Carteiras:** recalcular os valores da carteira a partir dos seus ativos.
+- **Ativos:** atualizar o valor atual dos ativos pelas últimas cotações.
+- **Transações:** exibir as transações de uma carteira.
 
-**Validações aplicadas:**
+Os IDs são gerados pelo sistema. Na alteração, pressionar ENTER mantém o valor atual do campo.
 
-- opções de menu, IDs e números inválidos são recusados e a pergunta é repetida;
-- campos obrigatórios e tamanho máximo dos textos conforme as colunas do banco;
-- CPF com 11 dígitos e dígitos verificadores corretos, sem duplicidade;
-- e-mail em formato válido e sem duplicidade; telefone com DDD;
-- senha com no mínimo 6 caracteres, gravada apenas como hash SHA-256;
-- símbolo de criptomoeda único, com 2 a 10 letras ou números;
-- valores em reais maiores que zero, com até 2 casas decimais; quantidades com até 8 casas;
-- variações percentuais não menores que -100%;
-- chaves estrangeiras escolhidas a partir da lista de registros existentes;
-- uma carteira não pode ter dois ativos da mesma criptomoeda, nem um usuário favoritar a mesma criptomoeda duas vezes;
-- registros com dependentes (por exemplo, um usuário com carteiras) não podem ser excluídos, e toda exclusão pede confirmação.
+## Validações
+
+- Opções de menu, IDs e números inválidos são recusados, e a pergunta é repetida.
+- Campos obrigatórios e tamanho máximo dos textos seguem as colunas do banco.
+- CPF com 11 dígitos e dígitos verificadores corretos, sem duplicidade.
+- E-mail em formato válido e sem duplicidade; telefone com DDD.
+- Senha com no mínimo 6 caracteres, gravada apenas como hash SHA-256.
+- Símbolo de criptomoeda único, com 2 a 10 letras ou números.
+- Valores em reais maiores que zero, com até 2 casas decimais; quantidades com até 8 casas.
+- Variações percentuais não menores que -100%.
+- Chaves estrangeiras escolhidas a partir da lista de registros existentes.
+- Uma carteira não pode ter dois ativos da mesma criptomoeda, e um usuário não pode favoritar a mesma criptomoeda duas vezes.
+- Registros com dependentes (por exemplo, um usuário com carteiras) não podem ser excluídos.
+- Toda exclusão pede confirmação.
+
+## Tecnologias
+
+- Java 17
+- Oracle Database
+- JDBC (driver `ojdbc8` 23.2.0.0)
+- Maven
+
+## Estrutura do projeto
+
+```
+voltz-tiopatinhas/
+├── ddl.sql                  Criação das tabelas e alterações
+├── dml.sql                  Dados de exemplo e consultas
+├── pom.xml                  Configuração do Maven
+├── DOCUMENTACAO.md          Modelagem e diagrama de classes
+└── src/missao/tiopatinhas/
+    ├── Main.java            Programa principal e menu de módulos
+    ├── model/               Classes de domínio
+    ├── dao/                 Acesso ao banco, uma classe por tabela
+    ├── view/                Submenus de console, um por módulo
+    ├── util/                Leitura do teclado e validações
+    └── factory/             Conexão com o Oracle
+```
+
+| Pacote | Classes |
+| --- | --- |
+| `model` | `Usuario`, `Carteira`, `Criptomoeda`, `Ativo`, `Transacao` (abstrata), `Compra`, `Venda`, `Aporte`, `Favorito`, `Cotacao` |
+| `dao` | `UsuarioDao`, `CarteiraDao`, `CriptomoedaDao`, `AtivoDao`, `TransacaoDao`, `AporteDao`, `FavoritoDao`, `CotacaoDao` |
+| `view` | `MenuBase` (abstrata) e um menu por módulo: `UsuarioMenu`, `CarteiraMenu`, `CriptomoedaMenu`, `AtivoMenu`, `TransacaoMenu`, `AporteMenu`, `FavoritoMenu`, `CotacaoMenu` |
+| `util` | `Console`, `Validador` |
+| `factory` | `ConnectionFactory` |
+
+Cada DAO oferece inserir, listar, buscar por ID, alterar e excluir, sempre com `PreparedStatement`. O `Main` abre uma única conexão, compartilhada por todos os DAOs e fechada ao sair do programa.
+
+## Banco de dados
+
+O `ddl.sql` cria as oito tabelas, com chaves primárias e estrangeiras, e em seguida aplica as alterações: colunas obrigatórias, restrições `UNIQUE` e `CHECK`, a coluna `dataAtualizacao` da carteira e a ampliação da coluna `quantidade` para 8 casas decimais.
+
+O `dml.sql` carrega dados de exemplo e traz consultas de conferência.
+
+> **Atenção:** o `dml.sql` começa com comandos `DELETE` que apagam todos os registros das oito tabelas. Execute-o apenas em um esquema de testes.
 
 ## Como executar
 
-### 1. Requisitos
+### Pré-requisitos
 
-- JDK compatível com **Java 17** ou superior.
-- Maven e IDE Java, como o IntelliJ IDEA.
-- Acesso autorizado ao banco Oracle da FIAP.
-- Tabelas do projeto já criadas no ambiente de testes.
+- JDK 17 ou superior
+- Maven (já incluído no IntelliJ IDEA)
+- Usuário e senha do banco Oracle da FIAP
 
-### 2. Preparar o banco, se necessário
+### 1. Preparar o banco
 
-O arquivo `ddl.sql` cria as oito tabelas e suas restrições. Execute-o **somente quando estiver preparando um esquema de testes que ainda não contenha essas tabelas**.
+Em um cliente SQL (SQL Developer, DBeaver ou outro), conectado ao seu usuário Oracle, execute na ordem:
 
-Se as tabelas já existem desde a Fase 6, execute apenas os dois `ALTER TABLE ... MODIFY (quantidade NUMBER(21,8))` do final da seção `ALTER` do `ddl.sql`. Eles ampliam a coluna `quantidade` de `Ativo` e `Transacao` para 8 casas decimais; sem eles, o Oracle arredonda as quantidades para 2 casas.
+1. `ddl.sql`
+2. `dml.sql` (opcional, para começar com dados de exemplo)
 
-O arquivo `dml.sql` contém dados demonstrativos e consultas, mas **começa com comandos `DELETE` que removem todos os registros das oito tabelas**. Utilize-o apenas em um esquema de testes descartável e após conferir seu conteúdo. Não é necessário executá-lo novamente quando o banco já está configurado.
+Se as tabelas já existem de uma fase anterior, execute apenas os dois últimos `ALTER TABLE` da seção `ALTER` do `ddl.sql`, que ampliam a coluna `quantidade` de `Ativo` e `Transacao`.
 
-### 3. Configurar o projeto no IntelliJ
+### 2. Configurar as credenciais
 
-1. Abra a pasta do projeto e importe o `pom.xml` como projeto Maven.
-2. Carregue as dependências Maven.
-3. Crie uma configuração de execução do tipo **Application**, com a classe principal `missao.tiopatinhas.Main`.
-4. Configure nessa execução as variáveis de ambiente `FIAP_DB_USER` (usuário Oracle) e `FIAP_DB_PASSWORD` (senha Oracle).
+O programa lê o usuário e a senha de variáveis de ambiente. Não há credenciais no código.
 
-A conexão é realizada por `ConnectionFactory.java`, utilizando a URL `jdbc:oracle:thin:@oracle.fiap.com.br:1521:orcl`. **Não inclua credenciais no código ou no repositório.**
+| Variável | Conteúdo |
+| --- | --- |
+| `FIAP_DB_USER` | Usuário do Oracle |
+| `FIAP_DB_PASSWORD` | Senha do Oracle |
+| `FIAP_DB_URL` | Opcional. Substitui a URL padrão `jdbc:oracle:thin:@oracle.fiap.com.br:1521:orcl` |
 
-### 4. Compilar e executar
+No IntelliJ: **Run > Edit Configurations…**, crie uma configuração **Application** com a classe principal `missao.tiopatinhas.Main` e preencha o campo **Environment variables**.
 
-Para compilar sem executar as operações de banco, utilize a tarefa Maven `compile` no IntelliJ ou o comando `mvn compile` no terminal, dentro da pasta do projeto.
+### 3. Executar
 
-Para usar o programa, inicie a classe `missao.tiopatinhas.Main` pelo IntelliJ, com as variáveis de ambiente configuradas, e navegue pelos menus digitando o número da opção.
+Abra o projeto no IntelliJ, aguarde o Maven baixar as dependências e execute a classe `missao.tiopatinhas.Main`. Navegue pelos menus digitando o número da opção.
 
-**Atenção:** as operações de inclusão, alteração e exclusão feitas pelos menus são gravadas imediatamente no Oracle.
+As inclusões, alterações e exclusões feitas pelos menus são gravadas imediatamente no banco.
 
-A variável de ambiente opcional `FIAP_DB_URL` permite apontar o programa para outro banco sem alterar o código; quando ela não existe, é usada a URL da FIAP.
+## Integrantes
 
-## Testes e validação
-
-**Fase 6 (11/10/2026):** conexão JDBC com o Oracle estabelecida, oito tabelas identificadas e operações CRUD demonstradas no console.
-
-**Fase 7 (13/11/2026):** o código foi compilado para Java 17 e os menus foram exercitados de ponta a ponta contra um banco H2 em memória, em modo de compatibilidade com Oracle, carregado com o `dml.sql`: inclusão, alteração, exclusão, exibição de todos e de um registro nos oito módulos, além das entradas inválidas e das exclusões bloqueadas por dependentes. **A execução contra o Oracle da FIAP ainda precisa ser repetida**, pois o H2 não reproduz todos os comportamentos do Oracle.
-
-O projeto não possui uma suíte de testes unitários automatizados.
+| Nome | RM |
+| --- | --- |
+| Miguel de França Monteiro | RM566226 |
+| Isa | RM562859 |
+| Gabriel Dantas Borges Soares | RM564860 |
+| João Vitor Lombardi Hayashi | RM563329 |
+| Maria Eduarda Santos Pedro | RM566546 |
 
 ## Documentação complementar
 
-Consulte o arquivo `DOCUMENTACAO.md` para informações adicionais sobre a modelagem de entidades, os relacionamentos e o diagrama de classes.
+O arquivo [DOCUMENTACAO.md](DOCUMENTACAO.md) descreve a modelagem das entidades, os relacionamentos e o diagrama de classes.

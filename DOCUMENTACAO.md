@@ -1,6 +1,6 @@
-# Documentação do Projeto - Sprint 3 - Tio Patinhas
+# Documentação do Projeto — VOLTZ / Missão Tio Patinhas
 
-Este documento detalha as melhorias realizadas no modelo de dados do projeto, incluindo a implementação de relações One-to-Many e Many-to-Many, definição de PKs/FKs e diagramação das classes.
+Este documento detalha o modelo de dados do projeto: relações One-to-Many e Many-to-Many, definição de PKs/FKs e diagrama de classes.
 
 ## 1. Mudanças Realizadas
 
@@ -62,6 +62,7 @@ classDiagram
         +double valorTotalInvestido
         +double valorAtual
         +double lucroPrejuizo
+        +LocalDateTime dataAtualizacao
         +List~Ativo~ ativos
         +List~Transacao~ transacoes
         +List~Aporte~ aportes
@@ -94,6 +95,7 @@ classDiagram
     }
 
     class Transacao {
+        <<abstract>>
         +int id (PK)
         +Carteira carteira (FK)
         +Criptomoeda criptomoeda (FK)
@@ -131,6 +133,8 @@ classDiagram
     Criptomoeda "1" -- "*" Transacao : participa de
     Carteira "1" -- "*" Aporte : recebe
     Criptomoeda "1" -- "*" Cotacao : possui histórico
+    Transacao <|-- Compra
+    Transacao <|-- Venda
 ```
 
 > **Nota:** O diagrama acima utiliza a sintaxe Mermaid. Ele pode ser visualizado diretamente no GitHub ou em editores como VS Code com extensões apropriadas, e exportado para PNG ou PDF conforme solicitado.
